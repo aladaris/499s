@@ -17,7 +17,6 @@ namespace _499.InteractionHandlers {
                                       .Concat(controls)
                                       .Where(c => c.GetType() == type);
         }
-
         public static void DisableAllButMe(System.Windows.Forms.Control me, Type type) {
             foreach (var control in GetAll(me.Parent, type)) {
                 if (control != me)
