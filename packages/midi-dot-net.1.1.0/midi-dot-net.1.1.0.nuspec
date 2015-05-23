@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>midi-dot-net</id>
+    <version>1.1.0</version>
+    <title>midi-dot-net</title>
+    <authors>Tom Lokovic</authors>
+    <owners>Tom Lokovic</owners>
+    <licenseUrl>http://opensource.org/licenses/BSD-3-Clause</licenseUrl>
+    <projectUrl>https://code.google.com/p/midi-dot-net/</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>This .NET library provides convenient, threadsafe access to MIDI devices. It does this by binding to the Win32 API with P/Invoke and then wrapping that in an object-oriented API which feels right at home in C# / .NET.</description>
+    <releaseNotes />
+    <copyright>Copyright © 2009 Tom Lokovic</copyright>
+    <tags>midi</tags>
+  </metadata>
+</package>

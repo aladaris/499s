@@ -1,0 +1,11 @@
+D:\Dropbox\28ymedio\499s\Programa\499Interaction\GestureTrigger\bin\Debug\GestureTrigger.exe.config
+D:\Dropbox\28ymedio\499s\Programa\499Interaction\GestureTrigger\bin\Debug\GestureTrigger.exe
+D:\Dropbox\28ymedio\499s\Programa\499Interaction\GestureTrigger\bin\Debug\GestureTrigger.pdb
+D:\Dropbox\28ymedio\499s\Programa\499Interaction\GestureTrigger\obj\Debug\GestureTrigger.csprojResolveAssemblyReference.cache
+D:\Dropbox\28ymedio\499s\Programa\499Interaction\GestureTrigger\obj\Debug\GestureTrigger.MainForm.resources
+D:\Dropbox\28ymedio\499s\Programa\499Interaction\GestureTrigger\obj\Debug\GestureTrigger.Properties.Resources.resources
+D:\Dropbox\28ymedio\499s\Programa\499Interaction\GestureTrigger\obj\Debug\GestureTrigger.csproj.GenerateResource.Cache
+D:\Dropbox\28ymedio\499s\Programa\499Interaction\GestureTrigger\obj\Debug\GestureTrigger.exe
+D:\Dropbox\28ymedio\499s\Programa\499Interaction\GestureTrigger\obj\Debug\GestureTrigger.pdb
+D:\Dropbox\28ymedio\499s\Programa\499Interaction\GestureTrigger\bin\Debug\Midi.dll
+D:\Dropbox\28ymedio\499s\Programa\499Interaction\GestureTrigger\bin\Debug\Midi.xml

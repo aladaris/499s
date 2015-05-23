@@ -1,0 +1,7 @@
+﻿################################################################################
+# Este archivo .gitignore ha sido creado automáticamente por Microsoft(R) Visual Studio.
+################################################################################
+
+/499.InteractionHandlers/bin/Debug
+/499.InteractionHandlers/obj/Debug
+/Lib.GestureTrigger
