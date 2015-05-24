@@ -44,7 +44,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FlaresHandler.cs" />
+    <Compile Include="MidiKnob.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SpectrumHandler.cs" />
     <Compile Include="SystemHandler.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="VideoClip.cs" />

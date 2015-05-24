@@ -13,10 +13,15 @@ namespace _499.InteractionHandlers {
         private readonly int _maxUsers;
         readonly private int _maxFlaresLeft;
         readonly private int _maxFlaresright;
-        public VideoClip[] _leftVideoClips;
-        public VideoClip[] _rightVideoClips;
+        private VideoClip[] _leftVideoClips;
+        private VideoClip[] _rightVideoClips;
         private int _runningVideoClipsLeft = 0;  // Number of videoclips running on the left side
         private int _runningVideoClipsRight = 0;  // Number of videoclips running on the right side
+
+        public int UserNum { get { return _nUsers; } }
+        public int PlayingLeft { get { return _runningVideoClipsLeft; } }
+        public int PlayingRight { get { return _runningVideoClipsRight; } }
+
 
         // Events
         public delegate void PlayVideoClipHandler(Midi.Pitch note);
@@ -71,7 +76,7 @@ namespace _499.InteractionHandlers {
                             clipR.Timer.Elapsed += OnRightVideoClipStop;
                         }
                     }
-                    break;
+                    return true;
             }
             return false;
         }
@@ -108,7 +113,7 @@ namespace _499.InteractionHandlers {
             if (timer != null) {
                 timer.Stop();
                 timer.Elapsed -= OnRightVideoClipStop;
-                _runningVideoClipsRight++;
+                _runningVideoClipsRight--;
             }
         }
 
