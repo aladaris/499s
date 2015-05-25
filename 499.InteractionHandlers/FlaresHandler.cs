@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace _499.InteractionHandlers {
 
+    public delegate void PlayVideoClipHandler(Midi.Pitch note);  // TODO: Refactor el nombre. Algo como Send MidiOn
+
     public enum FLARE_SIDE { LEFT, CENTER, RIGHT }
 
     public class FlaresHandler {
@@ -24,7 +26,6 @@ namespace _499.InteractionHandlers {
 
 
         // Events
-        public delegate void PlayVideoClipHandler(Midi.Pitch note);
         public event PlayVideoClipHandler OnVideoClipPlay;
 
         public VideoClip[] LeftVideoClips { get { return _leftVideoClips; } }

@@ -20,7 +20,7 @@ namespace ManualGestureTrigger {
         public MainForm() {
             InitializeComponent();
             LoadMidiOutDevicesComboBox();
-            _mainHandler = new SystemHandler(0, Channel.Channel1);
+            _mainHandler = new SystemHandler(2, Channel.Channel1);
         }
 
         private void LoadMidiOutDevicesComboBox() {
@@ -62,6 +62,10 @@ namespace ManualGestureTrigger {
         }
 
         private void AirHugHandler(object sender, EventArgs e) {
+
+        }
+
+        private void AerobicsHandler(object sender, EventArgs e) {
             CheckBox cb = sender as CheckBox;
             if (cb != null) {
                 if (cb.Checked) {
@@ -74,8 +78,24 @@ namespace ManualGestureTrigger {
                     _499.InteractionHandlers.Utils.EnableAllButMe(cb, typeof(CheckBox));
                 }
             }
-
         }
+
+        private void THandsHandler(object sender, EventArgs e) {
+            CheckBox cb = sender as CheckBox;
+            if (cb != null) {
+                if (cb.Checked) {
+                    switch (cb.Text[0]) {
+                        case 'L':
+                            _mainHandler.NewUserTimeTravel(TT_SIDE.LEFT); break;
+                        case 'R':
+                            _mainHandler.NewUserTimeTravel(TT_SIDE.RIGHT); break;
+                    }
+                } else {
+
+                }
+            }
+        }
+
         /*
         private void bt_knob_Click(object sender, EventArgs e) {
             OutputDevice _midiOut = OutputDevice.InstalledDevices[cb_MidiOutDevices.SelectedIndex];

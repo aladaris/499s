@@ -29,16 +29,25 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.cb_bothHandsUp_P1 = new System.Windows.Forms.CheckBox();
             this.cb_rightHandUp_P1 = new System.Windows.Forms.CheckBox();
+            this.cb_aerobics_P1 = new System.Windows.Forms.CheckBox();
+            this.cb_airHug_P1 = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.cb_bothHandsUp_P2 = new System.Windows.Forms.CheckBox();
             this.cb_rightHandUp_P2 = new System.Windows.Forms.CheckBox();
+            this.cb_aerobics_P2 = new System.Windows.Forms.CheckBox();
+            this.cb_airHug_P2 = new System.Windows.Forms.CheckBox();
             this.cb_leftHandUp_P3 = new System.Windows.Forms.CheckBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.cb_bothHandsUp_P3 = new System.Windows.Forms.CheckBox();
             this.cb_rightHandUp_P3 = new System.Windows.Forms.CheckBox();
-            this.cb_airHug_P1 = new System.Windows.Forms.CheckBox();
-            this.cb_airHug_P2 = new System.Windows.Forms.CheckBox();
+            this.cb_aerobics_P3 = new System.Windows.Forms.CheckBox();
             this.cb_airHug_P3 = new System.Windows.Forms.CheckBox();
+            this.cb_LtHand_P1 = new System.Windows.Forms.CheckBox();
+            this.cb_RtHand_P1 = new System.Windows.Forms.CheckBox();
+            this.cb_LtHand_P2 = new System.Windows.Forms.CheckBox();
+            this.cb_RtHand_P2 = new System.Windows.Forms.CheckBox();
+            this.cb_LtHand_P3 = new System.Windows.Forms.CheckBox();
+            this.cb_RtHand_P3 = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -80,6 +89,9 @@
             // 
             this.groupBox1.Controls.Add(this.cb_bothHandsUp_P1);
             this.groupBox1.Controls.Add(this.cb_rightHandUp_P1);
+            this.groupBox1.Controls.Add(this.cb_aerobics_P1);
+            this.groupBox1.Controls.Add(this.cb_RtHand_P1);
+            this.groupBox1.Controls.Add(this.cb_LtHand_P1);
             this.groupBox1.Controls.Add(this.cb_airHug_P1);
             this.groupBox1.Controls.Add(this.cb_leftHandUp_P1);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
@@ -111,11 +123,36 @@
             this.cb_rightHandUp_P1.UseVisualStyleBackColor = true;
             this.cb_rightHandUp_P1.CheckedChanged += new System.EventHandler(this.HandUpHandler);
             // 
+            // cb_aerobics_P1
+            // 
+            this.cb_aerobics_P1.AutoSize = true;
+            this.cb_aerobics_P1.Location = new System.Drawing.Point(90, 41);
+            this.cb_aerobics_P1.Name = "cb_aerobics_P1";
+            this.cb_aerobics_P1.Size = new System.Drawing.Size(67, 17);
+            this.cb_aerobics_P1.TabIndex = 1;
+            this.cb_aerobics_P1.Text = "Aerobics";
+            this.cb_aerobics_P1.UseVisualStyleBackColor = true;
+            this.cb_aerobics_P1.CheckedChanged += new System.EventHandler(this.AerobicsHandler);
+            // 
+            // cb_airHug_P1
+            // 
+            this.cb_airHug_P1.AutoSize = true;
+            this.cb_airHug_P1.Location = new System.Drawing.Point(6, 41);
+            this.cb_airHug_P1.Name = "cb_airHug_P1";
+            this.cb_airHug_P1.Size = new System.Drawing.Size(81, 17);
+            this.cb_airHug_P1.TabIndex = 1;
+            this.cb_airHug_P1.Text = "Air hug ( T )";
+            this.cb_airHug_P1.UseVisualStyleBackColor = true;
+            this.cb_airHug_P1.CheckedChanged += new System.EventHandler(this.AirHugHandler);
+            // 
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.cb_bothHandsUp_P2);
             this.groupBox2.Controls.Add(this.cb_rightHandUp_P2);
+            this.groupBox2.Controls.Add(this.cb_aerobics_P2);
+            this.groupBox2.Controls.Add(this.cb_RtHand_P2);
             this.groupBox2.Controls.Add(this.cb_airHug_P2);
+            this.groupBox2.Controls.Add(this.cb_LtHand_P2);
             this.groupBox2.Controls.Add(this.cb_leftHandUp_P2);
             this.groupBox2.Location = new System.Drawing.Point(12, 118);
             this.groupBox2.Name = "groupBox2";
@@ -146,6 +183,28 @@
             this.cb_rightHandUp_P2.UseVisualStyleBackColor = true;
             this.cb_rightHandUp_P2.CheckedChanged += new System.EventHandler(this.HandUpHandler);
             // 
+            // cb_aerobics_P2
+            // 
+            this.cb_aerobics_P2.AutoSize = true;
+            this.cb_aerobics_P2.Location = new System.Drawing.Point(90, 42);
+            this.cb_aerobics_P2.Name = "cb_aerobics_P2";
+            this.cb_aerobics_P2.Size = new System.Drawing.Size(67, 17);
+            this.cb_aerobics_P2.TabIndex = 1;
+            this.cb_aerobics_P2.Text = "Aerobics";
+            this.cb_aerobics_P2.UseVisualStyleBackColor = true;
+            this.cb_aerobics_P2.CheckedChanged += new System.EventHandler(this.AerobicsHandler);
+            // 
+            // cb_airHug_P2
+            // 
+            this.cb_airHug_P2.AutoSize = true;
+            this.cb_airHug_P2.Location = new System.Drawing.Point(6, 42);
+            this.cb_airHug_P2.Name = "cb_airHug_P2";
+            this.cb_airHug_P2.Size = new System.Drawing.Size(81, 17);
+            this.cb_airHug_P2.TabIndex = 1;
+            this.cb_airHug_P2.Text = "Air hug ( T )";
+            this.cb_airHug_P2.UseVisualStyleBackColor = true;
+            this.cb_airHug_P2.CheckedChanged += new System.EventHandler(this.AirHugHandler);
+            // 
             // cb_leftHandUp_P3
             // 
             this.cb_leftHandUp_P3.AutoSize = true;
@@ -161,8 +220,11 @@
             // 
             this.groupBox3.Controls.Add(this.cb_bothHandsUp_P3);
             this.groupBox3.Controls.Add(this.cb_rightHandUp_P3);
+            this.groupBox3.Controls.Add(this.cb_aerobics_P3);
+            this.groupBox3.Controls.Add(this.cb_RtHand_P3);
             this.groupBox3.Controls.Add(this.cb_airHug_P3);
             this.groupBox3.Controls.Add(this.cb_leftHandUp_P3);
+            this.groupBox3.Controls.Add(this.cb_LtHand_P3);
             this.groupBox3.Location = new System.Drawing.Point(12, 224);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(282, 100);
@@ -192,27 +254,16 @@
             this.cb_rightHandUp_P3.UseVisualStyleBackColor = true;
             this.cb_rightHandUp_P3.CheckedChanged += new System.EventHandler(this.HandUpHandler);
             // 
-            // cb_airHug_P1
+            // cb_aerobics_P3
             // 
-            this.cb_airHug_P1.AutoSize = true;
-            this.cb_airHug_P1.Location = new System.Drawing.Point(6, 41);
-            this.cb_airHug_P1.Name = "cb_airHug_P1";
-            this.cb_airHug_P1.Size = new System.Drawing.Size(81, 17);
-            this.cb_airHug_P1.TabIndex = 1;
-            this.cb_airHug_P1.Text = "Air hug ( T )";
-            this.cb_airHug_P1.UseVisualStyleBackColor = true;
-            this.cb_airHug_P1.CheckedChanged += new System.EventHandler(this.AirHugHandler);
-            // 
-            // cb_airHug_P2
-            // 
-            this.cb_airHug_P2.AutoSize = true;
-            this.cb_airHug_P2.Location = new System.Drawing.Point(6, 42);
-            this.cb_airHug_P2.Name = "cb_airHug_P2";
-            this.cb_airHug_P2.Size = new System.Drawing.Size(81, 17);
-            this.cb_airHug_P2.TabIndex = 1;
-            this.cb_airHug_P2.Text = "Air hug ( T )";
-            this.cb_airHug_P2.UseVisualStyleBackColor = true;
-            this.cb_airHug_P2.CheckedChanged += new System.EventHandler(this.AirHugHandler);
+            this.cb_aerobics_P3.AutoSize = true;
+            this.cb_aerobics_P3.Location = new System.Drawing.Point(90, 42);
+            this.cb_aerobics_P3.Name = "cb_aerobics_P3";
+            this.cb_aerobics_P3.Size = new System.Drawing.Size(67, 17);
+            this.cb_aerobics_P3.TabIndex = 1;
+            this.cb_aerobics_P3.Text = "Aerobics";
+            this.cb_aerobics_P3.UseVisualStyleBackColor = true;
+            this.cb_aerobics_P3.CheckedChanged += new System.EventHandler(this.AerobicsHandler);
             // 
             // cb_airHug_P3
             // 
@@ -224,6 +275,72 @@
             this.cb_airHug_P3.Text = "Air hug ( T )";
             this.cb_airHug_P3.UseVisualStyleBackColor = true;
             this.cb_airHug_P3.CheckedChanged += new System.EventHandler(this.AirHugHandler);
+            // 
+            // cb_LtHand_P1
+            // 
+            this.cb_LtHand_P1.AutoSize = true;
+            this.cb_LtHand_P1.Location = new System.Drawing.Point(6, 64);
+            this.cb_LtHand_P1.Name = "cb_LtHand_P1";
+            this.cb_LtHand_P1.Size = new System.Drawing.Size(71, 17);
+            this.cb_LtHand_P1.TabIndex = 1;
+            this.cb_LtHand_P1.Text = "L Hand T";
+            this.cb_LtHand_P1.UseVisualStyleBackColor = true;
+            this.cb_LtHand_P1.CheckedChanged += new System.EventHandler(this.THandsHandler);
+            // 
+            // cb_RtHand_P1
+            // 
+            this.cb_RtHand_P1.AutoSize = true;
+            this.cb_RtHand_P1.Location = new System.Drawing.Point(90, 64);
+            this.cb_RtHand_P1.Name = "cb_RtHand_P1";
+            this.cb_RtHand_P1.Size = new System.Drawing.Size(73, 17);
+            this.cb_RtHand_P1.TabIndex = 1;
+            this.cb_RtHand_P1.Text = "R Hand T";
+            this.cb_RtHand_P1.UseVisualStyleBackColor = true;
+            this.cb_RtHand_P1.CheckedChanged += new System.EventHandler(this.THandsHandler);
+            // 
+            // cb_LtHand_P2
+            // 
+            this.cb_LtHand_P2.AutoSize = true;
+            this.cb_LtHand_P2.Location = new System.Drawing.Point(6, 65);
+            this.cb_LtHand_P2.Name = "cb_LtHand_P2";
+            this.cb_LtHand_P2.Size = new System.Drawing.Size(71, 17);
+            this.cb_LtHand_P2.TabIndex = 1;
+            this.cb_LtHand_P2.Text = "L Hand T";
+            this.cb_LtHand_P2.UseVisualStyleBackColor = true;
+            this.cb_LtHand_P2.CheckedChanged += new System.EventHandler(this.THandsHandler);
+            // 
+            // cb_RtHand_P2
+            // 
+            this.cb_RtHand_P2.AutoSize = true;
+            this.cb_RtHand_P2.Location = new System.Drawing.Point(90, 65);
+            this.cb_RtHand_P2.Name = "cb_RtHand_P2";
+            this.cb_RtHand_P2.Size = new System.Drawing.Size(73, 17);
+            this.cb_RtHand_P2.TabIndex = 1;
+            this.cb_RtHand_P2.Text = "R Hand T";
+            this.cb_RtHand_P2.UseVisualStyleBackColor = true;
+            this.cb_RtHand_P2.CheckedChanged += new System.EventHandler(this.THandsHandler);
+            // 
+            // cb_LtHand_P3
+            // 
+            this.cb_LtHand_P3.AutoSize = true;
+            this.cb_LtHand_P3.Location = new System.Drawing.Point(6, 65);
+            this.cb_LtHand_P3.Name = "cb_LtHand_P3";
+            this.cb_LtHand_P3.Size = new System.Drawing.Size(71, 17);
+            this.cb_LtHand_P3.TabIndex = 1;
+            this.cb_LtHand_P3.Text = "L Hand T";
+            this.cb_LtHand_P3.UseVisualStyleBackColor = true;
+            this.cb_LtHand_P3.CheckedChanged += new System.EventHandler(this.THandsHandler);
+            // 
+            // cb_RtHand_P3
+            // 
+            this.cb_RtHand_P3.AutoSize = true;
+            this.cb_RtHand_P3.Location = new System.Drawing.Point(90, 65);
+            this.cb_RtHand_P3.Name = "cb_RtHand_P3";
+            this.cb_RtHand_P3.Size = new System.Drawing.Size(73, 17);
+            this.cb_RtHand_P3.TabIndex = 1;
+            this.cb_RtHand_P3.Text = "R Hand T";
+            this.cb_RtHand_P3.UseVisualStyleBackColor = true;
+            this.cb_RtHand_P3.CheckedChanged += new System.EventHandler(this.THandsHandler);
             // 
             // MainForm
             // 
@@ -266,6 +383,15 @@
         private System.Windows.Forms.CheckBox cb_airHug_P1;
         private System.Windows.Forms.CheckBox cb_airHug_P2;
         private System.Windows.Forms.CheckBox cb_airHug_P3;
+        private System.Windows.Forms.CheckBox cb_aerobics_P1;
+        private System.Windows.Forms.CheckBox cb_aerobics_P2;
+        private System.Windows.Forms.CheckBox cb_aerobics_P3;
+        private System.Windows.Forms.CheckBox cb_LtHand_P1;
+        private System.Windows.Forms.CheckBox cb_RtHand_P1;
+        private System.Windows.Forms.CheckBox cb_RtHand_P2;
+        private System.Windows.Forms.CheckBox cb_LtHand_P2;
+        private System.Windows.Forms.CheckBox cb_RtHand_P3;
+        private System.Windows.Forms.CheckBox cb_LtHand_P3;
     }
 }
 

@@ -21,7 +21,7 @@ namespace _499.InteractionHandlers {
         }
     }
 
-    public enum SPECTRUM_HANDLER_STATUS { 
+    public enum SPECTRUM_HANDLER_STATUS {
         IDLE,    // No se están mostrando spectrums.
         BLOCKED, // Haciendo fadin o fadeout (o cualquier otra acción ininterrumpible.
         SHOWING, // Mostrando un spectrum. Después del fadein y antes del  fadeout.

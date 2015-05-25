@@ -13,6 +13,7 @@ namespace _499.InteractionHandlers {
         // Hadlers
         FlaresHandler _flares;
         SpectrumHandler _spectrums;
+        TimeTravelHandler _timeTravel;
 
         public SystemHandler(int midi_out_id, Channel channel) {
             if ((midi_out_id >= 0) && (midi_out_id < OutputDevice.InstalledDevices.Count)) {
@@ -36,6 +37,11 @@ namespace _499.InteractionHandlers {
             _spectrums.Spectrums[1] = new Spectrum(1, 3, Control.TremoloLevel);
             _spectrums.Spectrums[2] = new Spectrum(2, 4, Control.SustainPedal);
             _spectrums.SendControlChange += OnControlChange;
+            // TIME TRAVEL
+            _timeTravel = new TimeTravelHandler(Control.ModulationWheel, 6, 25, 500, 300);  // Valores dependientes de la configuracion de Resolume (Velocidad entre [0.5, 3]
+            _timeTravel.SendControlChange += OnControlChange;
+            _timeTravel.SendMidiOn += OnVideoClipPlay;
+            _timeTravel.GoIdle();
         }
 
         #region Properties
@@ -70,11 +76,24 @@ namespace _499.InteractionHandlers {
         }
         #endregion
 
+        #region Time Travel
+        public bool NewUserTimeTravel(TT_SIDE side) {
+            return _timeTravel.NewUser(side);
+        }
+        public bool RemoveUserTimeTravel(TT_SIDE side) {
+            //return _timeTravel.RemoveUser(side);
+            // TODO: Esto
+            return false;
+        }
+        #endregion
+
         #region EventHandlers
         private void OnVideoClipPlay(Pitch note) {
             if (_midiOut != null)
-                if (_midiOut.IsOpen)
+                if (_midiOut.IsOpen) {
                     _midiOut.SendNoteOn(_channel, note, 127);
+                    _midiOut.SendNoteOff(_channel, note, 127);
+                }
         }
 
         private void OnControlChange(Control control, int value) {
