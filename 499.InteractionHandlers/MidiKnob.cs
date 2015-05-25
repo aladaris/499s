@@ -17,12 +17,11 @@ namespace _499.InteractionHandlers {
     /// </summary>
     public class MidiKnob {
         private int _id;
-        private OutputDevice _midiOut;
         private Control _ccValue;
         private byte _initVal;
         private byte _endVal;
         private byte _currentValue;
-        private sbyte _upOrDown;  // -1 From higher to lower value. 1 From lower to higher value.
+        //private sbyte _upOrDown;
         private byte _stepsCount;  // Numero de pasos en el intervalo [_initVal, _endVal]
         private int _duration;  // Milisegundos
         private Timer _timer;
@@ -37,10 +36,10 @@ namespace _499.InteractionHandlers {
         public bool IsRunning {
             get {
                 if (_timer.Enabled) {
-                    if (_upOrDown < 0) {
+                    if (UpOrDown < 0) {
                         if (_currentValue > _endVal)
                             return true;
-                    } else if (_upOrDown > 0) {
+                    } else if (UpOrDown > 0) {
                         if (_currentValue < _endVal)
                             return true;
                     }
@@ -48,11 +47,15 @@ namespace _499.InteractionHandlers {
                 return false;
             }
         }
+        public int Duration { get { return _duration; } set { _duration = value; } }
+        /// <summary>
+        /// -1 From higher to lower value. 1 From lower to higher value.
+        /// </summary>
+        public int UpOrDown { get; set; }
 
         public Control CCValue { get { return _ccValue; } set { _ccValue = value; } }
 
         /// <param name="id">Knob id</param>
-        /// <param name="midi_out">Midi out device</param>
         /// <param name="cc_value">CC parameter</param>
         /// <param name="init">Initial value to send</param>
         /// <param name="end">Final value to send</param>
@@ -68,11 +71,11 @@ namespace _499.InteractionHandlers {
             // From lower to higher value
             if (_initVal < _endVal) {
                 _stepsCount = (byte)(_endVal - _initVal);
-                _upOrDown = 1;
+                UpOrDown = 1;
                 // From higher to lower value
             } else if (_endVal < _initVal) {
                 _stepsCount = (byte)(_initVal - _endVal);
-                _upOrDown = -1;
+                UpOrDown = -1;
             } else
                 throw new IndexOutOfRangeException("Start and end value can't be at the same value.");
             double timeDelta = _duration / (double)_stepsCount;
@@ -83,30 +86,33 @@ namespace _499.InteractionHandlers {
         /// Starts the knob action.
         /// </summary>
         public void Start() {
-            //if (_midiOut != null) {
-                _currentValue = _initVal;
-                _timer.Elapsed += ClockTick;
-                _timer.Start();
-            //}
+            _currentValue = _initVal;
+            _timer.Elapsed += ClockTick;
+            _timer.Start();
+        }
+
+        public void SetRange(byte init, byte end) {
+            if (init != end) {
+                _initVal = init;
+                _endVal = end;
+            }
         }
 
         private void ClockTick(object sender, ElapsedEventArgs e) {
-            //if (_midiOut.IsOpen) {
-                //_midiOut.SendControlChange(Channel.Channel1, _ccValue, _currentValue);
             if (SendMidiControlChange != null)
                 SendMidiControlChange(_ccValue, _currentValue);
-            switch (_upOrDown) {
+            switch (UpOrDown) {
                 case -1: _currentValue--; break;
                 case 1: _currentValue++; break;
             }
             if (!IsRunning) {
                 _timer.Stop();
                 _timer.Elapsed -= ClockTick;
+                SendMidiControlChange(_ccValue, _endVal);  // We send the last value
                 if (KnobEndRunning != null) {
                     KnobEndRunning(_id);
                 }
             }
-            //}
         }
 
 

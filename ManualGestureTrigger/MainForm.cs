@@ -68,6 +68,10 @@ namespace ManualGestureTrigger {
                     _mainHandler.NewUserSpectrums();
                     // GUI
                     _499.InteractionHandlers.Utils.DisableAllButMe(cb, typeof(CheckBox));
+                } else {
+                    _mainHandler.RemoveUserSpectrums();
+                    // GUI
+                    _499.InteractionHandlers.Utils.EnableAllButMe(cb, typeof(CheckBox));
                 }
             }
 

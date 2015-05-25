@@ -31,7 +31,7 @@ namespace _499.InteractionHandlers {
             _flares.RightVideoClips[2] = new VideoClip(2, "Flare_R_2", 1, 0, Pitch.B3);
             _flares.OnVideoClipPlay += OnVideoClipPlay;
             // SPECTRUMS
-            _spectrums = new SpectrumHandler(3, _midiOut, 10000, 5000, 500, 3000);  // NOTE: Un knob a menos de 500 ms, se vuelve loco
+            _spectrums = new SpectrumHandler(3, 1500, 500, 800, 1000);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
             _spectrums.Spectrums[0] = new Spectrum(0, 2, Control.Volume);
             _spectrums.Spectrums[1] = new Spectrum(1, 3, Control.TremoloLevel);
             _spectrums.Spectrums[2] = new Spectrum(2, 4, Control.SustainPedal);
@@ -64,6 +64,9 @@ namespace _499.InteractionHandlers {
         #region Spectrums
         public bool NewUserSpectrums() {
             return _spectrums.NewUser();
+        }
+        public bool RemoveUserSpectrums() {
+            return _spectrums.RemoveUser();
         }
         #endregion
 

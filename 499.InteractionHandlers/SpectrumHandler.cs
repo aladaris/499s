@@ -33,8 +33,9 @@ namespace _499.InteractionHandlers {
         private Spectrum[] _spectrums;
         private Spectrum _currentSpectrum;
         private SPECTRUM_HANDLER_STATUS _status = SPECTRUM_HANDLER_STATUS.IDLE;
-        private MidiKnob _knobIn;
-        private MidiKnob _knobOut;
+        private MidiKnob _knobFade;
+        private int _fadeInTime;
+        private int _fadeOutTime;
         private Timer _duration; // Duration (without fadein and fadeout)
         private Timer _rester;  // We disable the handler for _resTime milliseconds after it stops
         // events
@@ -43,18 +44,16 @@ namespace _499.InteractionHandlers {
         public Spectrum[] Spectrums { get { return _spectrums; } }
         public SPECTRUM_HANDLER_STATUS Status { get { return _status; } }
 
-        public SpectrumHandler(int spectrum_count, Midi.OutputDevice midi_out, int duration = 5000, int fadeIn = 1000, int fadeOut = 1000, int rest = 7500) {
+        public SpectrumHandler(int spectrum_count, int duration = 5000, int fadeIn = 1000, int fadeOut = 1000, int rest = 7500) {
             if (spectrum_count > 0)
                 _spectrums = new Spectrum[spectrum_count];
             else
                 throw new IndexOutOfRangeException("The handler need at least one (1) spectrum.");
 
-            _knobIn = new MidiKnob(0, Midi.Control.Volume, 0, 127, fadeIn);
-            _knobOut = new MidiKnob(1, Midi.Control.Volume, 127, 0, fadeOut);
-            _knobIn.SendMidiControlChange += SendMidiControlChange;
-            _knobOut.SendMidiControlChange += SendMidiControlChange;
-            _knobIn.KnobEndRunning += FadeInEnded;
-            _knobOut.KnobEndRunning += FadeOutEnded;
+            _fadeInTime = fadeIn;
+            _fadeOutTime = fadeOut;
+            _knobFade = new MidiKnob(0, Midi.Control.Volume, 0, 127, _fadeInTime);
+            _knobFade.SendMidiControlChange += SendMidiControlChange;
             _duration = new Timer(duration);
             _duration.AutoReset = false;
             _duration.Elapsed += DurationEnded;
@@ -66,18 +65,33 @@ namespace _499.InteractionHandlers {
         public bool NewUser() {
             _nUsers++;  // TODO: Donde poner?
             if (_status == SPECTRUM_HANDLER_STATUS.IDLE) {
-                _currentSpectrum = GetCorrespondingSpectrum();
-                _knobIn.CCValue = _currentSpectrum.CCValue;
                 _status = SPECTRUM_HANDLER_STATUS.BLOCKED;
-                _knobIn.Start();
+                _currentSpectrum = GetCorrespondingSpectrum();
+                _knobFade.CCValue = _currentSpectrum.CCValue;
+                // Setting the fade in properties
+                _knobFade.UpOrDown = 1;
+                _knobFade.SetRange(0, 127);
+                _knobFade.Duration = _fadeInTime;
+                _knobFade.KnobEndRunning += FadeInEnded;
+                _knobFade.Start();
                 return true;
+            } else if (_status == SPECTRUM_HANDLER_STATUS.SHOWING) {
+                // TODO: Manejar toda la baina de que se escoja un video en una capa inferior (Set ese video a 127 y hacer un fadeout del actual)
             }
             return false;
         }
 
+        public bool RemoveUser() {
+            if (_nUsers - 1 < 0)
+                return false;
+            _nUsers--;
+            return true;
+        }
+
         private Spectrum GetCorrespondingSpectrum() {
             // TODO: Selección de spectrum
-            //return _spectrums[_nUsers % _spectrums.Length];
+            System.Random rand = new Random();
+            //return _spectrums[rand.Next(_spectrums.Length)];
             return _spectrums[0];  // Debug
         }
 
@@ -91,6 +105,7 @@ namespace _499.InteractionHandlers {
                 if (!_duration.Enabled) {
                     if (_status == SPECTRUM_HANDLER_STATUS.BLOCKED) {
                         _status = SPECTRUM_HANDLER_STATUS.SHOWING;
+                        _knobFade.KnobEndRunning -= FadeInEnded;
                         _duration.Start();
                     }
                 }
@@ -98,20 +113,28 @@ namespace _499.InteractionHandlers {
         }
 
         private void DurationEnded(object sender, ElapsedEventArgs e) {
-            if (!_knobOut.IsRunning) {
+            if (!_knobFade.IsRunning) {
                 if (_status == SPECTRUM_HANDLER_STATUS.SHOWING) {
-                    _knobOut.CCValue = _currentSpectrum.CCValue;
                     _status = SPECTRUM_HANDLER_STATUS.BLOCKED;
-                    _knobOut.Start();
+                    _knobFade.CCValue = _currentSpectrum.CCValue;
+                    // Setting the fade out properties
+                    _knobFade.UpOrDown = -1;
+                    _knobFade.SetRange(127, 0);
+                    _knobFade.Duration = _fadeOutTime;
+                    _knobFade.KnobEndRunning += FadeOutEnded;
+                    _knobFade.Start();
                 }
             }
         }
 
         private void FadeOutEnded(int id) {
-            if (!_rester.Enabled) {
-                if (_status == SPECTRUM_HANDLER_STATUS.BLOCKED) {
-                    _status = SPECTRUM_HANDLER_STATUS.RESTING;
-                    _rester.Start();
+            if (!_knobFade.IsRunning) {
+                if (!_rester.Enabled) {
+                    if (_status == SPECTRUM_HANDLER_STATUS.BLOCKED) {
+                        _status = SPECTRUM_HANDLER_STATUS.RESTING;
+                        _knobFade.KnobEndRunning -= FadeOutEnded;
+                        _rester.Start();
+                    }
                 }
             }
 
