@@ -47,13 +47,20 @@ namespace _499.InteractionHandlers {
                 return false;
             }
         }
+        /// <summary>
+        /// Time elapsed from initial value to the end one.
+        /// </summary>
         public int Duration { get { return _duration; } set { _duration = value; } }
         /// <summary>
         /// -1 From higher to lower value. 1 From lower to higher value.
         /// </summary>
         public int UpOrDown { get; set; }
-
+        /// <summary>
+        /// Midi Control Value
+        /// </summary>
         public Control CCValue { get { return _ccValue; } set { _ccValue = value; } }
+        public byte InitialValue { get { return _initVal; } }
+        public byte FinalValue { get { return _endVal; } }
 
         /// <param name="id">Knob id</param>
         /// <param name="cc_value">CC parameter</param>
@@ -91,8 +98,18 @@ namespace _499.InteractionHandlers {
             _timer.Start();
         }
 
+        /// <summary>
+        /// Set the knob range of action.
+        /// Also sets the UpOrDown value.
+        /// </summary>
+        /// <param name="init">Initial value</param>
+        /// <param name="end">End value</param>
         public void SetRange(byte init, byte end) {
             if (init != end) {
+                if (init < end)
+                    UpOrDown = 1;
+                else if (init > end)
+                    UpOrDown = -1;
                 _initVal = init;
                 _endVal = end;
             }

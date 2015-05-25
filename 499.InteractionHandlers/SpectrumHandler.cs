@@ -7,16 +7,16 @@ using System.Timers;
 
 namespace _499.InteractionHandlers {
 
-    public struct Spectrum {
-        private int _id;
-        private byte _layer;
+    public class Spectrum {
         private Midi.Control _midiCC;
 
         public Midi.Control CCValue { get { return _midiCC; } }
+        public int Id { get; set; }
+        public int Layer { get; set; }
 
-        public Spectrum(int id, byte layer, Midi.Control cc) {
-            _id = id;
-            _layer = layer;
+        public Spectrum(int id, int layer, Midi.Control cc) {
+            Id = id;
+            Layer = layer;
             _midiCC = cc;
         }
     }
@@ -32,6 +32,7 @@ namespace _499.InteractionHandlers {
         private int _nUsers = 0;
         private Spectrum[] _spectrums;
         private Spectrum _currentSpectrum;
+        private Spectrum _oldSpect;
         private SPECTRUM_HANDLER_STATUS _status = SPECTRUM_HANDLER_STATUS.IDLE;
         private MidiKnob _knobFade;
         private int _fadeInTime;
@@ -63,20 +64,47 @@ namespace _499.InteractionHandlers {
         }
 
         public bool NewUser() {
-            _nUsers++;  // TODO: Donde poner?
+            _nUsers++;
             if (_status == SPECTRUM_HANDLER_STATUS.IDLE) {
                 _status = SPECTRUM_HANDLER_STATUS.BLOCKED;
                 _currentSpectrum = GetCorrespondingSpectrum();
-                _knobFade.CCValue = _currentSpectrum.CCValue;
                 // Setting the fade in properties
-                _knobFade.UpOrDown = 1;
+                _knobFade.CCValue = _currentSpectrum.CCValue;
                 _knobFade.SetRange(0, 127);
                 _knobFade.Duration = _fadeInTime;
                 _knobFade.KnobEndRunning += FadeInEnded;
                 _knobFade.Start();
                 return true;
             } else if (_status == SPECTRUM_HANDLER_STATUS.SHOWING) {
-                // TODO: Manejar toda la baina de que se escoja un video en una capa inferior (Set ese video a 127 y hacer un fadeout del actual)
+                _status = SPECTRUM_HANDLER_STATUS.BLOCKED;
+                _oldSpect = _currentSpectrum;
+                _currentSpectrum = GetCorrespondingSpectrum();
+                if (_currentSpectrum.Layer > _oldSpect.Layer) {
+                    if (!_knobFade.IsRunning) {
+                        _duration.Elapsed -= DurationEnded;
+                        _duration.Stop();
+                        // Setting the fade in properties
+                        _knobFade.CCValue = _currentSpectrum.CCValue;
+                        _knobFade.SetRange(0, 127);
+                        _knobFade.Duration = _fadeInTime;
+                        _knobFade.KnobEndRunning += FadeInEndedFromShowing;
+                        _knobFade.Start();
+                        return true;
+                    }
+                } else if (_currentSpectrum.Layer < _oldSpect.Layer) {
+                    if (!_knobFade.IsRunning) {
+                        _duration.Elapsed -= DurationEnded;
+                        _duration.Stop();
+                        SendMidiControlChange(_currentSpectrum.CCValue, 127);  // Establecemos al 100% la capa a la que transicionar
+                        // Setting the fade in properties
+                        _knobFade.CCValue = _oldSpect.CCValue;
+                        _knobFade.SetRange(127, 0);
+                        _knobFade.Duration = _fadeInTime;
+                        _knobFade.KnobEndRunning += FadeInEndedFromShowing;
+                        _knobFade.Start();
+                        return true;
+                    }
+                }
             }
             return false;
         }
@@ -89,10 +117,14 @@ namespace _499.InteractionHandlers {
         }
 
         private Spectrum GetCorrespondingSpectrum() {
-            // TODO: Selección de spectrum
             System.Random rand = new Random();
-            //return _spectrums[rand.Next(_spectrums.Length)];
-            return _spectrums[0];  // Debug
+            Spectrum spect = _spectrums[rand.Next(_spectrums.Length)];
+            if (_currentSpectrum != null) {
+                while (spect.Id == _currentSpectrum.Id)
+                    spect = _spectrums[rand.Next(_spectrums.Length)];
+            }
+            return spect;
+            //return _spectrums[_nUsers - 1];  // Debug
         }
 
         private void SendMidiControlChange(Midi.Control control, int value) {
@@ -112,13 +144,23 @@ namespace _499.InteractionHandlers {
             }
         }
 
+        private void FadeInEndedFromShowing(int id) {
+            if (_status == SPECTRUM_HANDLER_STATUS.BLOCKED) {
+                if (_currentSpectrum.Layer > _oldSpect.Layer)
+                    SendMidiControlChange(_oldSpect.CCValue, 0);  // Apagamos el spectrum anterior (si vamos de abajo a arriba)
+                _knobFade.KnobEndRunning -= FadeInEndedFromShowing;
+                _duration.Elapsed += DurationEnded;
+                _duration.AutoReset = false;
+                FadeInEnded(id);
+            }
+        }
+
         private void DurationEnded(object sender, ElapsedEventArgs e) {
             if (!_knobFade.IsRunning) {
                 if (_status == SPECTRUM_HANDLER_STATUS.SHOWING) {
                     _status = SPECTRUM_HANDLER_STATUS.BLOCKED;
                     _knobFade.CCValue = _currentSpectrum.CCValue;
                     // Setting the fade out properties
-                    _knobFade.UpOrDown = -1;
                     _knobFade.SetRange(127, 0);
                     _knobFade.Duration = _fadeOutTime;
                     _knobFade.KnobEndRunning += FadeOutEnded;
