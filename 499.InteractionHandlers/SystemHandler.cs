@@ -81,9 +81,7 @@ namespace _499.InteractionHandlers {
             return _timeTravel.NewUser(side);
         }
         public bool RemoveUserTimeTravel(TT_SIDE side) {
-            //return _timeTravel.RemoveUser(side);
-            // TODO: Esto
-            return false;
+            return _timeTravel.RemoveUser(side);
         }
         #endregion
 
