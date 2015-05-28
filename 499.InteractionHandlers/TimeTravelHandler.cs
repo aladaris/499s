@@ -3,16 +3,58 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace _499.InteractionHandlers {
 
     public enum TT_SIDE {LEFT, RIGHT }
     public enum TT_STATUS { REWIND, IDLE, FASTFORWARD, SPEEDING_UP, SPEEDING_DOWN, CHANGING_DIRECTION }
+    //public enum TT_TRAVELLER_STATUS { TIMMING_OUT, RETRYING }
+
+    public delegate void TimeTravellerTimedOutHandler (TimeTraveller traveller);
+
+    public class TimeTraveller : IDisposable {
+        private static int TIMEOUT_VALUE = 10000;
+        private static int RETRY_VALUE = 500;
+        private Timer _timeOut;
+        public TT_SIDE Side { get; set; }
+        //public TT_TRAVELLER_STATUS Status { get; set; }
+        // events
+        public event TimeTravellerTimedOutHandler OnTimeOut;
+
+        public TimeTraveller(TT_SIDE side) {
+            Side = side;
+            _timeOut = new Timer(TIMEOUT_VALUE);
+            //Status = TT_TRAVELLER_STATUS.TIMMING_OUT;
+            _timeOut.Elapsed += TimeOutEnded;
+            _timeOut.AutoReset = false;
+            _timeOut.Start();
+        }
+
+        public void StartRemoval() {
+            _timeOut.Stop();
+            _timeOut.Interval = RETRY_VALUE;
+            _timeOut.AutoReset = false;
+            _timeOut.Start();
+        }
+
+        public void Dispose(){
+            _timeOut.Stop();
+            _timeOut.Dispose();
+        }
+
+        private void TimeOutEnded(object sender, ElapsedEventArgs e) {
+            if (OnTimeOut != null) {
+                OnTimeOut(this);
+            }
+        }
+
+    }
 
     public class TimeTravelHandler {
         private readonly int _maxUsers;
-        private int _nUsersRewind = 0;
-        private int _nUsersFForward = 0;
+        private Queue<TimeTraveller> _usersRewind;
+        private Queue<TimeTraveller> _usersFastForward;
         private TT_STATUS _prevStatus = TT_STATUS.IDLE;
         private TT_STATUS _status = TT_STATUS.IDLE;
         private byte _currentSpeed = 0;
@@ -23,36 +65,16 @@ namespace _499.InteractionHandlers {
         private MidiKnob _knobSpeed;
         private readonly int _directionChangeDuration;
         private readonly int _speedChangeDuration;
-        private bool _working;
-        private List<TT_SIDE> _deletionBuffer;  // Buffer con las eliminaciones que se producen mientras el handler está ocupado trabajando
         // events
         public event SendMidiControlChangeHandler SendControlChange;
         public event PlayVideoClipHandler SendMidiOn;  // TODO: Refactor el nombre. Algo como Send MidiOn
 
-        public int UserNum { get { return _nUsersRewind + _nUsersFForward; } }
-        public int TotalCount { get { return _nUsersFForward - _nUsersRewind; } }
+        public int UserNum { get { return _usersRewind.Count + _usersFastForward.Count; } }
+        public int TotalCount { get { return _usersFastForward.Count - _usersRewind.Count; } }
         public Midi.Control CCValue { get; set; }
         public Midi.Pitch FFMidinote { get; set; }
         public Midi.Pitch RewMidinote { get; set; }
-        public bool Working {
-            get { return _working; }
-            set {
-                _working = value;
-                /*
-                // Al terminar de trabajar mirar si hay cambios que hacer
-                if (_working == false) {
-                    //_working = true;
-                    foreach (var side in _deletionBuffer) {
-                        while (Working)
-                            continue;
-                        RemoveUser(side);
-                    }
-                    _deletionBuffer.Clear();
-                    //_working = false;
-                }
-                */
-            }
-        }
+        public bool Working { get; set; }
 
         public TimeTravelHandler(Midi.Control cc_value, int max_users, byte idle_speed_value = 25, int speed_change_duration = 500, int direction_change_duration = 300, Midi.Pitch rewind = Midi.Pitch.D0, Midi.Pitch fforward = Midi.Pitch.D1) {
             _maxUsers = max_users;
@@ -65,8 +87,9 @@ namespace _499.InteractionHandlers {
             _knobSpeed.SendMidiControlChange += SendMidiControlChange;
             RewMidinote = rewind;
             FFMidinote = fforward;
-            _deletionBuffer = new List<TT_SIDE>();
             Working = false;
+            _usersRewind = new Queue<TimeTraveller>();
+            _usersFastForward = new Queue<TimeTraveller>();
         }
 
         /// <summary>
@@ -76,44 +99,84 @@ namespace _499.InteractionHandlers {
             _currentSpeed = 0;
             GoIdle();
             _prevStatus = TT_STATUS.IDLE;
-            _nUsersFForward = 0;
-            _nUsersRewind = 0;
+            // TODO: Mirar este clear y los timers de los TimeTravellers
+            _usersFastForward.Clear();
+            _usersRewind.Clear();
         }
 
         public void GoIdle() {
-            //if (Working) {  // NOTE: Último cámbio!!
-                if ((_status == TT_STATUS.IDLE) || (_status == TT_STATUS.FASTFORWARD)) {
-                    if (!_knobSpeed.IsRunning) {
-                        _knobSpeed.Duration = _speedChangeDuration / 2;
-                        _knobSpeed.SetRange(_currentSpeed, _idleSpeed);
-                        _knobSpeed.KnobEndRunning += EndSpeedChanging;
-                        _status = TT_STATUS.SPEEDING_UP;
-                        _knobSpeed.Start();
-                    }
+            if ((_status == TT_STATUS.IDLE) || (_status == TT_STATUS.FASTFORWARD)) {
+                if (!_knobSpeed.IsRunning) {
+                    _knobSpeed.Duration = _speedChangeDuration / 2;
+                    _knobSpeed.SetRange(_currentSpeed, _idleSpeed);
+                    _knobSpeed.KnobEndRunning += EndSpeedChanging;
+                    _status = TT_STATUS.SPEEDING_UP;
+                    _knobSpeed.Start();
                 }
-                if (SendMidiOn != null)
-                    SendMidiOn(FFMidinote);
-                _currentSpeed = _idleSpeed;
-                _status = TT_STATUS.IDLE;
-                Working = false;
-            //}
+            }
+            if (SendMidiOn != null)
+                SendMidiOn(FFMidinote);
+            _currentSpeed = _idleSpeed;
+            _status = TT_STATUS.IDLE;
+        }
+
+        private void TimeTravellerTimedOut(TimeTraveller traveller) {
+            try {
+                switch (traveller.Side) {
+                    case TT_SIDE.LEFT: _usersRewind.Dequeue(); break;
+                    case TT_SIDE.RIGHT: _usersFastForward.Dequeue(); break;
+                }
+            } catch (InvalidOperationException) {
+                // TODO: Colas vacías
+            }
+
+            if (!Working) {
+                if (TriggerRemoveUserInteraction(traveller.Side)) {
+                    traveller.Dispose();
+                    return;
+                }
+            }
+            traveller.StartRemoval();
+            traveller.OnTimeOut -= TimeTravellerTimedOut;
+            traveller.OnTimeOut += TimeTravellerRetryRemoval;
+        }
+
+        private void TimeTravellerRetryRemoval(TimeTraveller traveller) {
+            if (!Working) {
+                if (TriggerRemoveUserInteraction(traveller.Side)) {
+                    traveller.Dispose();
+                    return;
+                }
+            }
+            traveller.StartRemoval();
         }
 
         public bool NewUser(TT_SIDE side) {
-            if ((!Working)&&(!_knobSpeed.IsRunning)) {
-                Working = true;
+            if (!Working) {
+                TimeTraveller nUser = new TimeTraveller(side);
+                switch (side) {
+                    case TT_SIDE.LEFT: _usersRewind.Enqueue(nUser); break;
+                    case TT_SIDE.RIGHT: _usersFastForward.Enqueue(nUser); break;
+                }
+                nUser.OnTimeOut += TimeTravellerTimedOut;
+                return TriggerNewUserInteraction(side);
+            }
+            return false;
+
+        }
+
+        private bool TriggerNewUserInteraction(TT_SIDE side) {
+            if (!_knobSpeed.IsRunning) {
                 switch (_status) {
                     case TT_STATUS.IDLE:
                         switch (side) {
                             case TT_SIDE.LEFT:
-                                _nUsersRewind++;
                                 if (UserNum <= _maxUsers) {
                                     ChangeDirection();
                                     return true;
                                 }
                                 break;
                             case TT_SIDE.RIGHT:
-                                _nUsersFForward++;
                                 if (UserNum <= _maxUsers) {
                                     _status = TT_STATUS.FASTFORWARD;  // Trick para establecer a FASTFORWARD después de aumentar la velocidad
                                     return IncreaseSpeed();
@@ -124,7 +187,6 @@ namespace _499.InteractionHandlers {
                     case TT_STATUS.FASTFORWARD:
                         switch (side) {
                             case TT_SIDE.LEFT:
-                                _nUsersRewind++;
                                 if (UserNum <= _maxUsers) {
                                     if (TotalCount > 0) {  // Keep going forward, but slower
                                         return DecreaseSpeed();
@@ -138,7 +200,6 @@ namespace _499.InteractionHandlers {
                                 }
                                 break;
                             case TT_SIDE.RIGHT:
-                                _nUsersFForward++;
                                 if (UserNum <= _maxUsers) {
                                     return IncreaseSpeed();
                                 }
@@ -149,13 +210,11 @@ namespace _499.InteractionHandlers {
                     case TT_STATUS.REWIND:
                         switch (side) {
                             case TT_SIDE.LEFT:
-                                _nUsersRewind++;
                                 if (UserNum <= _maxUsers) {
                                     return IncreaseSpeed();
                                 }
                                 break;
                             case TT_SIDE.RIGHT:
-                                _nUsersFForward++;
                                 if (UserNum <= _maxUsers) {
                                     if (TotalCount < 0) {  // Keep going backwards, but slower
                                         return DecreaseSpeed();
@@ -175,22 +234,46 @@ namespace _499.InteractionHandlers {
                 if (UserNum > _maxUsers) {
                     Reset();
                 }
-                Working = false;
             }
             return false;
         }
 
         public bool RemoveUser(TT_SIDE side) {
+            TimeTraveller user = null;
+            switch (side) {
+                case TT_SIDE.LEFT:
+                    if (_usersRewind.Count > 0) {
+                        try {
+                            user = _usersRewind.Dequeue();
+                        } catch (InvalidOperationException) {
+                            return false;
+                        }
+                    }
+                    break;
+                case TT_SIDE.RIGHT:
+                    if (_usersFastForward.Count > 0) {
+                        try {
+                            user = _usersFastForward.Dequeue();
+                        } catch (InvalidOperationException) {
+                            return false;
+                        }
+                    }
+                    break;
+            }
+            if (user != null) {
+                if (TriggerRemoveUserInteraction(user.Side)) {
+                    user.Dispose();
+                } else {
+                    user.StartRemoval();
+                }
+            }
+            return false;
+        }
+
+        public bool TriggerRemoveUserInteraction(TT_SIDE side) {
             if ((!Working) && (!_knobSpeed.IsRunning)) {  // TODO: Si está añadiendo un usuario; no va a sacar a uno que se va   <======================================================
-                Working = true;
-                int prevTotalCount;
                 switch (_status) {
                     case TT_STATUS.IDLE:
-                        prevTotalCount = TotalCount;
-                        switch (side) {
-                            case TT_SIDE.LEFT: _nUsersRewind--; break;
-                            case TT_SIDE.RIGHT: _nUsersFForward--; break;
-                        }
                         if (UserNum >= 0) {
                             if (TotalCount < 0) {
                                 ChangeDirection();
@@ -198,48 +281,38 @@ namespace _499.InteractionHandlers {
                             } else if (TotalCount > 0) {
                                 _status = TT_STATUS.FASTFORWARD;    // Trick para establecer a FASTFORWARD después de aumentar la velocidad
                                 // Calculamos si vamos a incrementar o disminuir la velocidad
-                                if (prevTotalCount < TotalCount)
+                                if (side == TT_SIDE.LEFT)
                                     return IncreaseSpeed();
-                                else if (prevTotalCount > TotalCount)
+                                else if (side == TT_SIDE.RIGHT)
                                     return DecreaseSpeed();
                             }
                         }
                         break;
                     case TT_STATUS.FASTFORWARD:
-                        prevTotalCount = TotalCount;
-                        switch (side) {
-                            case TT_SIDE.LEFT: _nUsersRewind--; break;
-                            case TT_SIDE.RIGHT: _nUsersFForward--; break;
-                        }
                         if (UserNum >= 0) {
                             if (TotalCount == 0) {
                                 GoIdle();
                                 return true;
                             } else if (TotalCount > 0) {
                                 // Calculamos si vamos a incrementar o disminuir la velocidad
-                                if (prevTotalCount < TotalCount)
+                                if (side == TT_SIDE.LEFT)
                                     return IncreaseSpeed();
-                                else if (prevTotalCount > TotalCount)
+                                else if (side == TT_SIDE.RIGHT)
                                     return DecreaseSpeed();
                             }
                         }
                         break;
 
                     case TT_STATUS.REWIND:
-                        prevTotalCount = TotalCount;
-                        switch (side) {
-                            case TT_SIDE.LEFT: _nUsersRewind--; break;
-                            case TT_SIDE.RIGHT: _nUsersFForward--; break;
-                        }
                         if (UserNum >= 0) {
                             if (TotalCount == 0) {
                                 ChangeDirection();
                                 return true;
                             } else if (TotalCount < 0) {
                                 // Calculamos si vamos a incrementar o disminuir la velocidad
-                                if (prevTotalCount > TotalCount)
+                                if (side == TT_SIDE.RIGHT)
                                     return IncreaseSpeed();
-                                else if (prevTotalCount < TotalCount)
+                                else if (side == TT_SIDE.LEFT)
                                     return DecreaseSpeed();
                             }
                         }
@@ -249,38 +322,31 @@ namespace _499.InteractionHandlers {
                 if (UserNum < 0) {
                     Reset();
                 }
-                Working = false;
-            } else if (Working) {
-                //_deletionBuffer.Add(side);
-                // Solucion "barata": Espera llegar a la condicion de Reset
-                // TODO: Mejorar; el sistema se queda acelerado hasta q se alcanza la condicion de reset
-                //       Tal vez un método llamada periódicamente, que compruebe le número TotalCount y actue en consecuencia??????????????
-                switch (side) {
-                    case TT_SIDE.LEFT: _nUsersRewind--; break;
-                    case TT_SIDE.RIGHT: _nUsersFForward--; break;
-                }
+                //Working = false;
             }
             return false;
         }
 
         #region Change Speed
         private bool IncreaseSpeed() {
-            if (Working) {
+            Working = true;
+            //if (Working) {
                 _prevStatus = _status;  // Al finalinar el knob, se volverá a este estado
                 _status = TT_STATUS.SPEEDING_UP;
                 return ChangeSpeed();
-            }
-            return false;
+            //}
+            //return false;
 
         }
 
         private bool DecreaseSpeed() {
-            if (Working) {
+            Working = true;
+            //if (Working) {
                 _prevStatus = _status;  // Al finalinar el knob, se volverá a este estado
                 _status = TT_STATUS.SPEEDING_DOWN;
                 return ChangeSpeed();
-            }
-            return false;
+            //}
+            //return false;
         }
 
         private bool ChangeSpeed() {
@@ -310,7 +376,8 @@ namespace _499.InteractionHandlers {
 
         #region Change Direction
         private void ChangeDirection() {
-            if (Working) {
+            Working = true;
+            //if (Working) {
                 if ((_status == TT_STATUS.REWIND) || (_status == TT_STATUS.IDLE)) {
                     if (!_knobSpeed.IsRunning) {
                         _prevStatus = _status;
@@ -321,7 +388,7 @@ namespace _499.InteractionHandlers {
                         _knobSpeed.Start();
                     }
                 }
-            }
+            //}
         }
 
         private void ChangeDirectionSlowDownEnd(int id) {
