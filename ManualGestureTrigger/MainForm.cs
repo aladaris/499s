@@ -93,9 +93,15 @@ namespace ManualGestureTrigger {
                 } else {
                     switch (cb.Text[0]) {
                         case 'L':
-                            _mainHandler.RemoveUserTimeTravel(TT_SIDE.LEFT); break;
+                            //while (!_mainHandler.RemoveUserTimeTravel(TT_SIDE.LEFT))
+                            //    continue;
+                            _mainHandler.RemoveUserTimeTravel(TT_SIDE.LEFT);
+                            break;
                         case 'R':
-                            _mainHandler.RemoveUserTimeTravel(TT_SIDE.RIGHT); break;
+                            //while (!_mainHandler.RemoveUserTimeTravel(TT_SIDE.RIGHT))
+                            //    continue;
+                            _mainHandler.RemoveUserTimeTravel(TT_SIDE.RIGHT);
+                            break;
                     }
                 }
             }

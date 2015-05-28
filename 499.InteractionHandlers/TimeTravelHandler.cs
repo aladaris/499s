@@ -23,6 +23,8 @@ namespace _499.InteractionHandlers {
         private MidiKnob _knobSpeed;
         private readonly int _directionChangeDuration;
         private readonly int _speedChangeDuration;
+        private bool _working;
+        private List<TT_SIDE> _deletionBuffer;  // Buffer con las eliminaciones que se producen mientras el handler está ocupado trabajando
         // events
         public event SendMidiControlChangeHandler SendControlChange;
         public event PlayVideoClipHandler SendMidiOn;  // TODO: Refactor el nombre. Algo como Send MidiOn
@@ -32,6 +34,25 @@ namespace _499.InteractionHandlers {
         public Midi.Control CCValue { get; set; }
         public Midi.Pitch FFMidinote { get; set; }
         public Midi.Pitch RewMidinote { get; set; }
+        public bool Working {
+            get { return _working; }
+            set {
+                _working = value;
+                /*
+                // Al terminar de trabajar mirar si hay cambios que hacer
+                if (_working == false) {
+                    //_working = true;
+                    foreach (var side in _deletionBuffer) {
+                        while (Working)
+                            continue;
+                        RemoveUser(side);
+                    }
+                    _deletionBuffer.Clear();
+                    //_working = false;
+                }
+                */
+            }
+        }
 
         public TimeTravelHandler(Midi.Control cc_value, int max_users, byte idle_speed_value = 25, int speed_change_duration = 500, int direction_change_duration = 300, Midi.Pitch rewind = Midi.Pitch.D0, Midi.Pitch fforward = Midi.Pitch.D1) {
             _maxUsers = max_users;
@@ -44,6 +65,8 @@ namespace _499.InteractionHandlers {
             _knobSpeed.SendMidiControlChange += SendMidiControlChange;
             RewMidinote = rewind;
             FFMidinote = fforward;
+            _deletionBuffer = new List<TT_SIDE>();
+            Working = false;
         }
 
         /// <summary>
@@ -58,23 +81,27 @@ namespace _499.InteractionHandlers {
         }
 
         public void GoIdle() {
-            if ((_status == TT_STATUS.IDLE) || (_status == TT_STATUS.FASTFORWARD)) {
-                if (!_knobSpeed.IsRunning) {
-                    _knobSpeed.Duration = _speedChangeDuration / 2;
-                    _knobSpeed.SetRange(_currentSpeed, _idleSpeed);
-                    _knobSpeed.KnobEndRunning += EndSpeedChanging;
-                    _status = TT_STATUS.SPEEDING_UP;
-                    _knobSpeed.Start();
+            //if (Working) {  // NOTE: Último cámbio!!
+                if ((_status == TT_STATUS.IDLE) || (_status == TT_STATUS.FASTFORWARD)) {
+                    if (!_knobSpeed.IsRunning) {
+                        _knobSpeed.Duration = _speedChangeDuration / 2;
+                        _knobSpeed.SetRange(_currentSpeed, _idleSpeed);
+                        _knobSpeed.KnobEndRunning += EndSpeedChanging;
+                        _status = TT_STATUS.SPEEDING_UP;
+                        _knobSpeed.Start();
+                    }
                 }
-            }
-            if (SendMidiOn != null)
-                SendMidiOn(FFMidinote);
-            _currentSpeed = _idleSpeed;
-            _status = TT_STATUS.IDLE;
+                if (SendMidiOn != null)
+                    SendMidiOn(FFMidinote);
+                _currentSpeed = _idleSpeed;
+                _status = TT_STATUS.IDLE;
+                Working = false;
+            //}
         }
 
         public bool NewUser(TT_SIDE side) {
-            if (!_knobSpeed.IsRunning) {
+            if ((!Working)&&(!_knobSpeed.IsRunning)) {
+                Working = true;
                 switch (_status) {
                     case TT_STATUS.IDLE:
                         switch (side) {
@@ -88,15 +115,8 @@ namespace _499.InteractionHandlers {
                             case TT_SIDE.RIGHT:
                                 _nUsersFForward++;
                                 if (UserNum <= _maxUsers) {
-                                    _prevStatus = TT_STATUS.FASTFORWARD;  // Al finalinar el knob, se volverá a este estado
-                                    _status = TT_STATUS.SPEEDING_UP;
-                                    if (!_knobSpeed.IsRunning) {
-                                        _knobSpeed.Duration = _speedChangeDuration;
-                                        _knobSpeed.SetRange(_currentSpeed, GetNewSpeed());
-                                        _knobSpeed.KnobEndRunning += EndSpeedChanging;
-                                        _knobSpeed.Start();
-                                        return true;
-                                    }
+                                    _status = TT_STATUS.FASTFORWARD;  // Trick para establecer a FASTFORWARD después de aumentar la velocidad
+                                    return IncreaseSpeed();
                                 }
                                 break;
                         }
@@ -107,15 +127,7 @@ namespace _499.InteractionHandlers {
                                 _nUsersRewind++;
                                 if (UserNum <= _maxUsers) {
                                     if (TotalCount > 0) {  // Keep going forward, but slower
-                                        _prevStatus = _status;
-                                        _status = TT_STATUS.SPEEDING_DOWN;
-                                        if (!_knobSpeed.IsRunning) {
-                                            _knobSpeed.Duration = _speedChangeDuration;
-                                            _knobSpeed.SetRange(_currentSpeed, GetNewSpeed());
-                                            _knobSpeed.KnobEndRunning += EndSpeedChanging;
-                                            _knobSpeed.Start();
-                                            return true;
-                                        }
+                                        return DecreaseSpeed();
                                     } else if (TotalCount == 0) {  // Go to IDLE
                                         GoIdle();
                                         return true;
@@ -128,15 +140,7 @@ namespace _499.InteractionHandlers {
                             case TT_SIDE.RIGHT:
                                 _nUsersFForward++;
                                 if (UserNum <= _maxUsers) {
-                                    _prevStatus = _status;
-                                    _status = TT_STATUS.SPEEDING_UP;
-                                    if (!_knobSpeed.IsRunning) {
-                                        _knobSpeed.Duration = _speedChangeDuration;
-                                        _knobSpeed.SetRange(_currentSpeed, GetNewSpeed());
-                                        _knobSpeed.KnobEndRunning += EndSpeedChanging;
-                                        _knobSpeed.Start();
-                                        return true;
-                                    }
+                                    return IncreaseSpeed();
                                 }
                                 break;
                         }
@@ -147,30 +151,14 @@ namespace _499.InteractionHandlers {
                             case TT_SIDE.LEFT:
                                 _nUsersRewind++;
                                 if (UserNum <= _maxUsers) {
-                                    _prevStatus = _status;
-                                    _status = TT_STATUS.SPEEDING_UP;
-                                    if (!_knobSpeed.IsRunning) {
-                                        _knobSpeed.Duration = _speedChangeDuration;
-                                        _knobSpeed.SetRange(_currentSpeed, GetNewSpeed());
-                                        _knobSpeed.KnobEndRunning += EndSpeedChanging;
-                                        _knobSpeed.Start();
-                                        return true;
-                                    }
+                                    return IncreaseSpeed();
                                 }
                                 break;
                             case TT_SIDE.RIGHT:
                                 _nUsersFForward++;
                                 if (UserNum <= _maxUsers) {
                                     if (TotalCount < 0) {  // Keep going backwards, but slower
-                                        _prevStatus = _status;
-                                        _status = TT_STATUS.SPEEDING_DOWN;
-                                        if (!_knobSpeed.IsRunning) {
-                                            _knobSpeed.Duration = _speedChangeDuration;
-                                            _knobSpeed.SetRange(_currentSpeed, GetNewSpeed());
-                                            _knobSpeed.KnobEndRunning += EndSpeedChanging;
-                                            _knobSpeed.Start();
-                                            return true;
-                                        }
+                                        return DecreaseSpeed();
                                     } else if (TotalCount == 0) {  // Go to IDLE
                                         ChangeDirection();
                                         return true;
@@ -184,15 +172,17 @@ namespace _499.InteractionHandlers {
                         break;
                 }
                 // Reset en caso de que se sigan añadiendo usuarios sin quitar más.
-                if (UserNum > (_maxUsers * 2)) {
+                if (UserNum > _maxUsers) {
                     Reset();
                 }
+                Working = false;
             }
             return false;
         }
 
         public bool RemoveUser(TT_SIDE side) {
-            if (!_knobSpeed.IsRunning) {
+            if ((!Working) && (!_knobSpeed.IsRunning)) {  // TODO: Si está añadiendo un usuario; no va a sacar a uno que se va   <======================================================
+                Working = true;
                 int prevTotalCount;
                 switch (_status) {
                     case TT_STATUS.IDLE:
@@ -206,20 +196,12 @@ namespace _499.InteractionHandlers {
                                 ChangeDirection();
                                 return true;
                             } else if (TotalCount > 0) {
-                                _prevStatus = TT_STATUS.FASTFORWARD;  // Al finalinar el knob, se volverá a este estado
+                                _status = TT_STATUS.FASTFORWARD;    // Trick para establecer a FASTFORWARD después de aumentar la velocidad
                                 // Calculamos si vamos a incrementar o disminuir la velocidad
                                 if (prevTotalCount < TotalCount)
-                                    _status = TT_STATUS.SPEEDING_UP;
+                                    return IncreaseSpeed();
                                 else if (prevTotalCount > TotalCount)
-                                    _status = TT_STATUS.SPEEDING_DOWN;
-
-                                if (!_knobSpeed.IsRunning) {
-                                    _knobSpeed.Duration = _speedChangeDuration;
-                                    _knobSpeed.SetRange(_currentSpeed, GetNewSpeed());
-                                    _knobSpeed.KnobEndRunning += EndSpeedChanging;
-                                    _knobSpeed.Start();
-                                    return true;
-                                }
+                                    return DecreaseSpeed();
                             }
                         }
                         break;
@@ -234,18 +216,11 @@ namespace _499.InteractionHandlers {
                                 GoIdle();
                                 return true;
                             } else if (TotalCount > 0) {
+                                // Calculamos si vamos a incrementar o disminuir la velocidad
                                 if (prevTotalCount < TotalCount)
-                                    _status = TT_STATUS.SPEEDING_UP;
+                                    return IncreaseSpeed();
                                 else if (prevTotalCount > TotalCount)
-                                    _status = TT_STATUS.SPEEDING_DOWN;
-
-                                if (!_knobSpeed.IsRunning) {
-                                    _knobSpeed.Duration = _speedChangeDuration;
-                                    _knobSpeed.SetRange(_currentSpeed, GetNewSpeed());
-                                    _knobSpeed.KnobEndRunning += EndSpeedChanging;
-                                    _knobSpeed.Start();
-                                    return true;
-                                }
+                                    return DecreaseSpeed();
                             }
                         }
                         break;
@@ -261,19 +236,11 @@ namespace _499.InteractionHandlers {
                                 ChangeDirection();
                                 return true;
                             } else if (TotalCount < 0) {
+                                // Calculamos si vamos a incrementar o disminuir la velocidad
                                 if (prevTotalCount > TotalCount)
-                                    _status = TT_STATUS.SPEEDING_UP;
+                                    return IncreaseSpeed();
                                 else if (prevTotalCount < TotalCount)
-                                    _status = TT_STATUS.SPEEDING_DOWN;
-
-                                _prevStatus = TT_STATUS.REWIND;  // Al finalinar el knob, se volverá a este estado
-                                if (!_knobSpeed.IsRunning) {
-                                    _knobSpeed.Duration = _speedChangeDuration;
-                                    _knobSpeed.SetRange(_currentSpeed, GetNewSpeed());
-                                    _knobSpeed.KnobEndRunning += EndSpeedChanging;
-                                    _knobSpeed.Start();
-                                    return true;
-                                }
+                                    return DecreaseSpeed();
                             }
                         }
                         break;
@@ -282,67 +249,126 @@ namespace _499.InteractionHandlers {
                 if (UserNum < 0) {
                     Reset();
                 }
+                Working = false;
+            } else if (Working) {
+                //_deletionBuffer.Add(side);
+                // Solucion "barata": Espera llegar a la condicion de Reset
+                // TODO: Mejorar; el sistema se queda acelerado hasta q se alcanza la condicion de reset
+                //       Tal vez un método llamada periódicamente, que compruebe le número TotalCount y actue en consecuencia??????????????
+                switch (side) {
+                    case TT_SIDE.LEFT: _nUsersRewind--; break;
+                    case TT_SIDE.RIGHT: _nUsersFForward--; break;
+                }
             }
             return false;
         }
 
-
-        private void EndSpeedChanging(int id) {
-            if ((_status == TT_STATUS.SPEEDING_UP)||(_status == TT_STATUS.SPEEDING_DOWN)) {
-                _knobSpeed.KnobEndRunning -= EndSpeedChanging;
-                _currentSpeed = GetNewSpeed();
-                _status = _prevStatus;
+        #region Change Speed
+        private bool IncreaseSpeed() {
+            if (Working) {
+                _prevStatus = _status;  // Al finalinar el knob, se volverá a este estado
+                _status = TT_STATUS.SPEEDING_UP;
+                return ChangeSpeed();
             }
+            return false;
+
         }
 
-        private void ChangeDirection() {
-            if ((_status == TT_STATUS.REWIND) || (_status == TT_STATUS.IDLE)) {
+        private bool DecreaseSpeed() {
+            if (Working) {
+                _prevStatus = _status;  // Al finalinar el knob, se volverá a este estado
+                _status = TT_STATUS.SPEEDING_DOWN;
+                return ChangeSpeed();
+            }
+            return false;
+        }
+
+        private bool ChangeSpeed() {
+            if (Working) {
                 if (!_knobSpeed.IsRunning) {
-                    _prevStatus = _status;
-                    _status = TT_STATUS.CHANGING_DIRECTION;
-                    _knobSpeed.Duration = _directionChangeDuration;
-                    _knobSpeed.SetRange(_currentSpeed, 0);
-                    _knobSpeed.KnobEndRunning += ChangeDirectionSlowDownEnd;
+                    _knobSpeed.Duration = _speedChangeDuration;
+                    _knobSpeed.SetRange(_currentSpeed, GetNewSpeed());
+                    _knobSpeed.KnobEndRunning += EndSpeedChanging;
                     _knobSpeed.Start();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void EndSpeedChanging(int id) {
+            if (Working) {
+                if ((_status == TT_STATUS.SPEEDING_UP) || (_status == TT_STATUS.SPEEDING_DOWN)) {
+                    _knobSpeed.KnobEndRunning -= EndSpeedChanging;
+                    _currentSpeed = GetNewSpeed();
+                    _status = _prevStatus;
+                    Working = false;
+                }
+            }
+        }
+        #endregion
+
+        #region Change Direction
+        private void ChangeDirection() {
+            if (Working) {
+                if ((_status == TT_STATUS.REWIND) || (_status == TT_STATUS.IDLE)) {
+                    if (!_knobSpeed.IsRunning) {
+                        _prevStatus = _status;
+                        _status = TT_STATUS.CHANGING_DIRECTION;
+                        _knobSpeed.Duration = _directionChangeDuration;
+                        _knobSpeed.SetRange(_currentSpeed, 0);
+                        _knobSpeed.KnobEndRunning += ChangeDirectionSlowDownEnd;
+                        _knobSpeed.Start();
+                    }
                 }
             }
         }
 
         private void ChangeDirectionSlowDownEnd(int id) {
-            if (_status == TT_STATUS.CHANGING_DIRECTION) {
-                switch (_prevStatus) {
-                    case TT_STATUS.IDLE:
-                        if (SendMidiOn != null)
-                            SendMidiOn(RewMidinote);  // Mandamos el comando de cambio de sentido
-                        break;
-                    case TT_STATUS.REWIND:
-                        if (SendMidiOn != null)
-                            SendMidiOn(FFMidinote);
-                        break;
-                }
-                if (!_knobSpeed.IsRunning) {
-                    _knobSpeed.Duration = _directionChangeDuration;
-                    _knobSpeed.SetRange(0, _idleSpeed);
-                    _knobSpeed.KnobEndRunning -= ChangeDirectionSlowDownEnd;
-                    _knobSpeed.KnobEndRunning += ChangeDirectionSpeedUpEnd;
-                    _knobSpeed.Start();
+            if (Working) {
+                if (_status == TT_STATUS.CHANGING_DIRECTION) {
+                    switch (_prevStatus) {
+                        case TT_STATUS.IDLE:
+                            if (SendMidiOn != null)
+                                SendMidiOn(RewMidinote);  // Mandamos el comando de cambio de sentido
+                            break;
+                        case TT_STATUS.REWIND:
+                            if (SendMidiOn != null)
+                                SendMidiOn(FFMidinote);
+                            break;
+                        default:
+                            if (SendMidiOn != null)
+                                SendMidiOn(RewMidinote);  // En caso de duda, reproducimos hacia adelante
+                            break;
+                    }
+                    if (!_knobSpeed.IsRunning) {
+                        _knobSpeed.Duration = _directionChangeDuration;
+                        _knobSpeed.SetRange(0, _idleSpeed);
+                        _knobSpeed.KnobEndRunning -= ChangeDirectionSlowDownEnd;
+                        _knobSpeed.KnobEndRunning += ChangeDirectionSpeedUpEnd;
+                        _knobSpeed.Start();
+                    }
                 }
             }
         }
 
         private void ChangeDirectionSpeedUpEnd(int id) {
-            if (_status == TT_STATUS.CHANGING_DIRECTION) {
-                _knobSpeed.KnobEndRunning -= ChangeDirectionSpeedUpEnd;
-                switch (_prevStatus) {
-                    case TT_STATUS.IDLE:
-                        _status = TT_STATUS.REWIND;
-                        break;
-                    case TT_STATUS.REWIND:
-                        _status = TT_STATUS.IDLE;
-                        break;
+            if (Working) {
+                if (_status == TT_STATUS.CHANGING_DIRECTION) {
+                    _knobSpeed.KnobEndRunning -= ChangeDirectionSpeedUpEnd;
+                    switch (_prevStatus) {
+                        case TT_STATUS.IDLE:
+                            _status = TT_STATUS.REWIND;
+                            break;
+                        case TT_STATUS.REWIND:
+                            _status = TT_STATUS.IDLE;
+                            break;
+                    }
                 }
+                Working = false;
             }
         }
+        #endregion
 
 
 
