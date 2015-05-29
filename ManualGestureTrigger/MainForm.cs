@@ -92,39 +92,16 @@ namespace ManualGestureTrigger {
                     }
                 } else {
                     switch (cb.Text[0]) {
-                        case 'L':
-                            //while (!_mainHandler.RemoveUserTimeTravel(TT_SIDE.LEFT))
-                            //    continue;
-                            _mainHandler.RemoveUserTimeTravel(TT_SIDE.LEFT);
-                            break;
-                        case 'R':
-                            //while (!_mainHandler.RemoveUserTimeTravel(TT_SIDE.RIGHT))
-                            //    continue;
-                            _mainHandler.RemoveUserTimeTravel(TT_SIDE.RIGHT);
-                            break;
+                        case 'L': _mainHandler.RemoveUserTimeTravel(TT_SIDE.LEFT); break;
+                        case 'R': _mainHandler.RemoveUserTimeTravel(TT_SIDE.RIGHT); break;
                     }
                 }
             }
         }
 
-        /*
-        private void bt_knob_Click(object sender, EventArgs e) {
-            OutputDevice _midiOut = OutputDevice.InstalledDevices[cb_MidiOutDevices.SelectedIndex];
-            _midiOut.Open();
-            _499.InteractionHandlers.MidiKnob knob = new _499.InteractionHandlers.MidiKnob(_midiOut, Midi.Control.Expression, 0, 127, 1000);
-            knob.Start();
-            ((Button)sender).Enabled = false;
-            while (knob.IsRunning) {
-            }
-            knob = new _499.InteractionHandlers.MidiKnob(_midiOut, Midi.Control.Expression, 127, 0, 2000);
-            knob.Start();
-            while (knob.IsRunning) {
-            }
-            _midiOut.Close();
-            ((Button)sender).Enabled = true;
-        }
-        */
-        
-
+        // Update del estado de los Handlers
+        private void richTextBox1_MouseUp(object sender, MouseEventArgs e) {
+            ((RichTextBox)sender).Text = _mainHandler.GetHandlersStatus();
+        }       
     }
 }

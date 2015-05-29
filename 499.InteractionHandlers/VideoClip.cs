@@ -24,7 +24,13 @@ namespace _499.InteractionHandlers {
         public int Layer { get { return _layer; } }
         public Midi.Pitch MidiNote { get { return _midiNote; } }
         public System.Timers.Timer Timer { get { return _timer; } }
-        public bool IsPlaying { get { return _timer.Enabled; } }
+        public bool IsPlaying { 
+            get {
+                if (_timer != null)
+                    return _timer.Enabled;
+                return false;
+            }
+        }
         #endregion
         #region Methods
         public VideoClip(int id, string name, int length, int layer, Midi.Pitch note) {
@@ -38,7 +44,7 @@ namespace _499.InteractionHandlers {
         }
 
         public bool Play() {
-            if (!IsPlaying) {
+            if ((!IsPlaying)&&(_timer != null)) {
                 _timer.Start();
                 return _timer.Enabled;
             }
@@ -46,7 +52,7 @@ namespace _499.InteractionHandlers {
         }
 
         public bool Stop() {
-            if (IsPlaying) {
+            if ((IsPlaying)&&(_timer != null)) {
                 _timer.Stop();
                 return _timer.Enabled;
             }

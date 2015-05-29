@@ -30,24 +30,27 @@
             this.cb_bothHandsUp_P1 = new System.Windows.Forms.CheckBox();
             this.cb_rightHandUp_P1 = new System.Windows.Forms.CheckBox();
             this.cb_aerobics_P1 = new System.Windows.Forms.CheckBox();
+            this.cb_RtHand_P1 = new System.Windows.Forms.CheckBox();
+            this.cb_LtHand_P1 = new System.Windows.Forms.CheckBox();
             this.cb_airHug_P1 = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.cb_bothHandsUp_P2 = new System.Windows.Forms.CheckBox();
             this.cb_rightHandUp_P2 = new System.Windows.Forms.CheckBox();
             this.cb_aerobics_P2 = new System.Windows.Forms.CheckBox();
+            this.cb_RtHand_P2 = new System.Windows.Forms.CheckBox();
             this.cb_airHug_P2 = new System.Windows.Forms.CheckBox();
+            this.cb_LtHand_P2 = new System.Windows.Forms.CheckBox();
             this.cb_leftHandUp_P3 = new System.Windows.Forms.CheckBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.cb_bothHandsUp_P3 = new System.Windows.Forms.CheckBox();
             this.cb_rightHandUp_P3 = new System.Windows.Forms.CheckBox();
             this.cb_aerobics_P3 = new System.Windows.Forms.CheckBox();
-            this.cb_airHug_P3 = new System.Windows.Forms.CheckBox();
-            this.cb_LtHand_P1 = new System.Windows.Forms.CheckBox();
-            this.cb_RtHand_P1 = new System.Windows.Forms.CheckBox();
-            this.cb_LtHand_P2 = new System.Windows.Forms.CheckBox();
-            this.cb_RtHand_P2 = new System.Windows.Forms.CheckBox();
-            this.cb_LtHand_P3 = new System.Windows.Forms.CheckBox();
             this.cb_RtHand_P3 = new System.Windows.Forms.CheckBox();
+            this.cb_airHug_P3 = new System.Windows.Forms.CheckBox();
+            this.cb_LtHand_P3 = new System.Windows.Forms.CheckBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -57,9 +60,9 @@
             // 
             this.cb_MidiOutDevices.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cb_MidiOutDevices.FormattingEnabled = true;
-            this.cb_MidiOutDevices.Location = new System.Drawing.Point(565, 30);
+            this.cb_MidiOutDevices.Location = new System.Drawing.Point(518, 30);
             this.cb_MidiOutDevices.Name = "cb_MidiOutDevices";
-            this.cb_MidiOutDevices.Size = new System.Drawing.Size(200, 21);
+            this.cb_MidiOutDevices.Size = new System.Drawing.Size(247, 21);
             this.cb_MidiOutDevices.TabIndex = 0;
             this.cb_MidiOutDevices.SelectedIndexChanged += new System.EventHandler(this.cb_MidiOutDevices_SelectedIndexChanged);
             // 
@@ -134,6 +137,28 @@
             this.cb_aerobics_P1.UseVisualStyleBackColor = true;
             this.cb_aerobics_P1.CheckedChanged += new System.EventHandler(this.AerobicsHandler);
             // 
+            // cb_RtHand_P1
+            // 
+            this.cb_RtHand_P1.AutoSize = true;
+            this.cb_RtHand_P1.Location = new System.Drawing.Point(90, 64);
+            this.cb_RtHand_P1.Name = "cb_RtHand_P1";
+            this.cb_RtHand_P1.Size = new System.Drawing.Size(73, 17);
+            this.cb_RtHand_P1.TabIndex = 1;
+            this.cb_RtHand_P1.Text = "R Hand T";
+            this.cb_RtHand_P1.UseVisualStyleBackColor = true;
+            this.cb_RtHand_P1.CheckedChanged += new System.EventHandler(this.THandsHandler);
+            // 
+            // cb_LtHand_P1
+            // 
+            this.cb_LtHand_P1.AutoSize = true;
+            this.cb_LtHand_P1.Location = new System.Drawing.Point(6, 64);
+            this.cb_LtHand_P1.Name = "cb_LtHand_P1";
+            this.cb_LtHand_P1.Size = new System.Drawing.Size(71, 17);
+            this.cb_LtHand_P1.TabIndex = 1;
+            this.cb_LtHand_P1.Text = "L Hand T";
+            this.cb_LtHand_P1.UseVisualStyleBackColor = true;
+            this.cb_LtHand_P1.CheckedChanged += new System.EventHandler(this.THandsHandler);
+            // 
             // cb_airHug_P1
             // 
             this.cb_airHug_P1.AutoSize = true;
@@ -194,6 +219,17 @@
             this.cb_aerobics_P2.UseVisualStyleBackColor = true;
             this.cb_aerobics_P2.CheckedChanged += new System.EventHandler(this.AerobicsHandler);
             // 
+            // cb_RtHand_P2
+            // 
+            this.cb_RtHand_P2.AutoSize = true;
+            this.cb_RtHand_P2.Location = new System.Drawing.Point(90, 65);
+            this.cb_RtHand_P2.Name = "cb_RtHand_P2";
+            this.cb_RtHand_P2.Size = new System.Drawing.Size(73, 17);
+            this.cb_RtHand_P2.TabIndex = 1;
+            this.cb_RtHand_P2.Text = "R Hand T";
+            this.cb_RtHand_P2.UseVisualStyleBackColor = true;
+            this.cb_RtHand_P2.CheckedChanged += new System.EventHandler(this.THandsHandler);
+            // 
             // cb_airHug_P2
             // 
             this.cb_airHug_P2.AutoSize = true;
@@ -204,6 +240,17 @@
             this.cb_airHug_P2.Text = "Air hug ( T )";
             this.cb_airHug_P2.UseVisualStyleBackColor = true;
             this.cb_airHug_P2.CheckedChanged += new System.EventHandler(this.AirHugHandler);
+            // 
+            // cb_LtHand_P2
+            // 
+            this.cb_LtHand_P2.AutoSize = true;
+            this.cb_LtHand_P2.Location = new System.Drawing.Point(6, 65);
+            this.cb_LtHand_P2.Name = "cb_LtHand_P2";
+            this.cb_LtHand_P2.Size = new System.Drawing.Size(71, 17);
+            this.cb_LtHand_P2.TabIndex = 1;
+            this.cb_LtHand_P2.Text = "L Hand T";
+            this.cb_LtHand_P2.UseVisualStyleBackColor = true;
+            this.cb_LtHand_P2.CheckedChanged += new System.EventHandler(this.THandsHandler);
             // 
             // cb_leftHandUp_P3
             // 
@@ -265,6 +312,17 @@
             this.cb_aerobics_P3.UseVisualStyleBackColor = true;
             this.cb_aerobics_P3.CheckedChanged += new System.EventHandler(this.AerobicsHandler);
             // 
+            // cb_RtHand_P3
+            // 
+            this.cb_RtHand_P3.AutoSize = true;
+            this.cb_RtHand_P3.Location = new System.Drawing.Point(90, 65);
+            this.cb_RtHand_P3.Name = "cb_RtHand_P3";
+            this.cb_RtHand_P3.Size = new System.Drawing.Size(73, 17);
+            this.cb_RtHand_P3.TabIndex = 1;
+            this.cb_RtHand_P3.Text = "R Hand T";
+            this.cb_RtHand_P3.UseVisualStyleBackColor = true;
+            this.cb_RtHand_P3.CheckedChanged += new System.EventHandler(this.THandsHandler);
+            // 
             // cb_airHug_P3
             // 
             this.cb_airHug_P3.AutoSize = true;
@@ -275,50 +333,6 @@
             this.cb_airHug_P3.Text = "Air hug ( T )";
             this.cb_airHug_P3.UseVisualStyleBackColor = true;
             this.cb_airHug_P3.CheckedChanged += new System.EventHandler(this.AirHugHandler);
-            // 
-            // cb_LtHand_P1
-            // 
-            this.cb_LtHand_P1.AutoSize = true;
-            this.cb_LtHand_P1.Location = new System.Drawing.Point(6, 64);
-            this.cb_LtHand_P1.Name = "cb_LtHand_P1";
-            this.cb_LtHand_P1.Size = new System.Drawing.Size(71, 17);
-            this.cb_LtHand_P1.TabIndex = 1;
-            this.cb_LtHand_P1.Text = "L Hand T";
-            this.cb_LtHand_P1.UseVisualStyleBackColor = true;
-            this.cb_LtHand_P1.CheckedChanged += new System.EventHandler(this.THandsHandler);
-            // 
-            // cb_RtHand_P1
-            // 
-            this.cb_RtHand_P1.AutoSize = true;
-            this.cb_RtHand_P1.Location = new System.Drawing.Point(90, 64);
-            this.cb_RtHand_P1.Name = "cb_RtHand_P1";
-            this.cb_RtHand_P1.Size = new System.Drawing.Size(73, 17);
-            this.cb_RtHand_P1.TabIndex = 1;
-            this.cb_RtHand_P1.Text = "R Hand T";
-            this.cb_RtHand_P1.UseVisualStyleBackColor = true;
-            this.cb_RtHand_P1.CheckedChanged += new System.EventHandler(this.THandsHandler);
-            // 
-            // cb_LtHand_P2
-            // 
-            this.cb_LtHand_P2.AutoSize = true;
-            this.cb_LtHand_P2.Location = new System.Drawing.Point(6, 65);
-            this.cb_LtHand_P2.Name = "cb_LtHand_P2";
-            this.cb_LtHand_P2.Size = new System.Drawing.Size(71, 17);
-            this.cb_LtHand_P2.TabIndex = 1;
-            this.cb_LtHand_P2.Text = "L Hand T";
-            this.cb_LtHand_P2.UseVisualStyleBackColor = true;
-            this.cb_LtHand_P2.CheckedChanged += new System.EventHandler(this.THandsHandler);
-            // 
-            // cb_RtHand_P2
-            // 
-            this.cb_RtHand_P2.AutoSize = true;
-            this.cb_RtHand_P2.Location = new System.Drawing.Point(90, 65);
-            this.cb_RtHand_P2.Name = "cb_RtHand_P2";
-            this.cb_RtHand_P2.Size = new System.Drawing.Size(73, 17);
-            this.cb_RtHand_P2.TabIndex = 1;
-            this.cb_RtHand_P2.Text = "R Hand T";
-            this.cb_RtHand_P2.UseVisualStyleBackColor = true;
-            this.cb_RtHand_P2.CheckedChanged += new System.EventHandler(this.THandsHandler);
             // 
             // cb_LtHand_P3
             // 
@@ -331,22 +345,41 @@
             this.cb_LtHand_P3.UseVisualStyleBackColor = true;
             this.cb_LtHand_P3.CheckedChanged += new System.EventHandler(this.THandsHandler);
             // 
-            // cb_RtHand_P3
+            // label1
             // 
-            this.cb_RtHand_P3.AutoSize = true;
-            this.cb_RtHand_P3.Location = new System.Drawing.Point(90, 65);
-            this.cb_RtHand_P3.Name = "cb_RtHand_P3";
-            this.cb_RtHand_P3.Size = new System.Drawing.Size(73, 17);
-            this.cb_RtHand_P3.TabIndex = 1;
-            this.cb_RtHand_P3.Text = "R Hand T";
-            this.cb_RtHand_P3.UseVisualStyleBackColor = true;
-            this.cb_RtHand_P3.CheckedChanged += new System.EventHandler(this.THandsHandler);
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(444, 33);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(68, 13);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "MIDI device:";
+            // 
+            // richTextBox1
+            // 
+            this.richTextBox1.Location = new System.Drawing.Point(518, 74);
+            this.richTextBox1.Name = "richTextBox1";
+            this.richTextBox1.Size = new System.Drawing.Size(247, 179);
+            this.richTextBox1.TabIndex = 6;
+            this.richTextBox1.Text = " Click to update handler info...";
+            this.richTextBox1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.richTextBox1_MouseUp);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(463, 76);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(49, 13);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "Log Info:";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(777, 472);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.richTextBox1);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -362,6 +395,7 @@
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -392,6 +426,9 @@
         private System.Windows.Forms.CheckBox cb_LtHand_P2;
         private System.Windows.Forms.CheckBox cb_RtHand_P3;
         private System.Windows.Forms.CheckBox cb_LtHand_P3;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.Label label2;
     }
 }
 

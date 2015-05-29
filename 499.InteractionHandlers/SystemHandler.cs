@@ -24,12 +24,12 @@ namespace _499.InteractionHandlers {
             _channel = channel;
             // FLARES
             _flares = new FlaresHandler(3, 3, 2, 2);
-            _flares.LeftVideoClips[0] = new VideoClip(0, "Flare_L_0", 1, 0, Pitch.A1);
-            _flares.LeftVideoClips[1] = new VideoClip(1, "Flare_L_1", 1, 0, Pitch.A2);
-            _flares.LeftVideoClips[2] = new VideoClip(2, "Flare_L_2", 1, 0, Pitch.A3);
-            _flares.RightVideoClips[0] = new VideoClip(0, "Flare_R_0", 1, 0, Pitch.B1);
-            _flares.RightVideoClips[1] = new VideoClip(1, "Flare_R_1", 1, 0, Pitch.B2);
-            _flares.RightVideoClips[2] = new VideoClip(2, "Flare_R_2", 1, 0, Pitch.B3);
+            _flares.LeftVideoClips[0] = new VideoClip(0, "Flare_L_0", 5, 6, Pitch.A1);
+            _flares.LeftVideoClips[1] = new VideoClip(1, "Flare_L_1", 1, 6, Pitch.A2);
+            _flares.LeftVideoClips[2] = new VideoClip(2, "Flare_L_2", 1, 6, Pitch.A3);
+            _flares.RightVideoClips[0] = new VideoClip(0, "Flare_R_0", 2, 5, Pitch.B1);
+            _flares.RightVideoClips[1] = new VideoClip(1, "Flare_R_1", 6, 5, Pitch.B2);
+            //_flares.RightVideoClips[2] = new VideoClip(2, "Flare_R_2", 1, 0, Pitch.B3);
             _flares.OnVideoClipPlay += OnVideoClipPlay;
             // SPECTRUMS
             _spectrums = new SpectrumHandler(3, 2000, 500, 800, 1000);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
@@ -38,7 +38,7 @@ namespace _499.InteractionHandlers {
             _spectrums.Spectrums[2] = new Spectrum(2, 4, Control.SustainPedal);
             _spectrums.SendControlChange += OnControlChange;
             // TIME TRAVEL
-            _timeTravel = new TimeTravelHandler(Control.ModulationWheel, 6, 25, 500, 300);  // Valores dependientes de la configuracion de Resolume (Velocidad entre [0.5, 3]
+            _timeTravel = new TimeTravelHandler(Control.ModulationWheel, 6, 25, 150, 75);  // Valores dependientes de la configuracion de Resolume (Velocidad entre [0.5, 3]
             _timeTravel.SendControlChange += OnControlChange;
             _timeTravel.SendMidiOn += OnVideoClipPlay;
             _timeTravel.GoIdle();
@@ -57,6 +57,27 @@ namespace _499.InteractionHandlers {
             }
         }
         #endregion
+
+        public string GetHandlersStatus() {
+            string texto = "FlaresHandler:\n";
+            texto += "  UserNum = " + _flares.UserNum.ToString() + '\n';
+            texto += "  PlayingLeft = " + _flares.PlayingLeft.ToString() + '\n';
+            texto += "  PlayingRight = " + _flares.PlayingRight.ToString() + '\n';
+            texto += "\nSpectrumHanlder:\n";
+            texto += "  Status = ";
+            switch (_spectrums.Status) {
+                case SPECTRUM_HANDLER_STATUS.IDLE: texto += "IDLE\n"; break;
+                case SPECTRUM_HANDLER_STATUS.BLOCKED: texto += "BLOCKED\n"; break;
+                case SPECTRUM_HANDLER_STATUS.RESTING: texto += "RESTING\n"; break;
+                case SPECTRUM_HANDLER_STATUS.SHOWING: texto += "SHOWING\n"; break;
+            }
+            texto += "\nTimeTravelHanlder:\n";
+            texto += "  UserNum = " + _timeTravel.UserNum.ToString() + '\n';
+            texto += "  TotalCount = " + _timeTravel.TotalCount.ToString() + '\n';
+            texto += "  Working = " + _timeTravel.Working.ToString() + '\n';
+
+            return texto;
+        }
 
         #region Flares
         public bool NewUserFlares(FLARE_SIDE side) {

@@ -9,23 +9,27 @@ namespace _499.InteractionHandlers {
 
     public enum TT_SIDE {LEFT, RIGHT }
     public enum TT_STATUS { REWIND, IDLE, FASTFORWARD, SPEEDING_UP, SPEEDING_DOWN, CHANGING_DIRECTION }
-    //public enum TT_TRAVELLER_STATUS { TIMMING_OUT, RETRYING }
 
+    /// <summary>
+    /// Generado cada vez que un TimeTraveller llega completa un ciclo de reloj establecido.
+    /// </summary>
+    /// <param name="traveller">Triggering time traveller.</param>
     public delegate void TimeTravellerTimedOutHandler (TimeTraveller traveller);
 
     public class TimeTraveller : IDisposable {
         private static int TIMEOUT_VALUE = 10000;
         private static int RETRY_VALUE = 500;
+        public static int MAX_RETRIES = 10;
         private Timer _timeOut;
         public TT_SIDE Side { get; set; }
-        //public TT_TRAVELLER_STATUS Status { get; set; }
+        public int Retries { get; set; }
         // events
         public event TimeTravellerTimedOutHandler OnTimeOut;
 
         public TimeTraveller(TT_SIDE side) {
             Side = side;
+            Retries = 0;
             _timeOut = new Timer(TIMEOUT_VALUE);
-            //Status = TT_TRAVELLER_STATUS.TIMMING_OUT;
             _timeOut.Elapsed += TimeOutEnded;
             _timeOut.AutoReset = false;
             _timeOut.Start();
@@ -90,6 +94,7 @@ namespace _499.InteractionHandlers {
             Working = false;
             _usersRewind = new Queue<TimeTraveller>();
             _usersFastForward = new Queue<TimeTraveller>();
+            GoIdle();
         }
 
         /// <summary>
@@ -100,10 +105,19 @@ namespace _499.InteractionHandlers {
             GoIdle();
             _prevStatus = TT_STATUS.IDLE;
             // TODO: Mirar este clear y los timers de los TimeTravellers
+            while (_usersFastForward.Count > 0) {
+                _usersFastForward.Dequeue().Dispose();
+            }
             _usersFastForward.Clear();
+            while (_usersRewind.Count > 0) {
+                _usersRewind.Dequeue().Dispose();
+            }
             _usersRewind.Clear();
         }
 
+        /// <summary>
+        /// Goes (smoothly) to the IDLE state, no matter what.
+        /// </summary>
         public void GoIdle() {
             if ((_status == TT_STATUS.IDLE) || (_status == TT_STATUS.FASTFORWARD)) {
                 if (!_knobSpeed.IsRunning) {
@@ -120,37 +134,13 @@ namespace _499.InteractionHandlers {
             _status = TT_STATUS.IDLE;
         }
 
-        private void TimeTravellerTimedOut(TimeTraveller traveller) {
-            try {
-                switch (traveller.Side) {
-                    case TT_SIDE.LEFT: _usersRewind.Dequeue(); break;
-                    case TT_SIDE.RIGHT: _usersFastForward.Dequeue(); break;
-                }
-            } catch (InvalidOperationException) {
-                // TODO: Colas vacías
-            }
-
-            if (!Working) {
-                if (TriggerRemoveUserInteraction(traveller.Side)) {
-                    traveller.Dispose();
-                    return;
-                }
-            }
-            traveller.StartRemoval();
-            traveller.OnTimeOut -= TimeTravellerTimedOut;
-            traveller.OnTimeOut += TimeTravellerRetryRemoval;
-        }
-
-        private void TimeTravellerRetryRemoval(TimeTraveller traveller) {
-            if (!Working) {
-                if (TriggerRemoveUserInteraction(traveller.Side)) {
-                    traveller.Dispose();
-                    return;
-                }
-            }
-            traveller.StartRemoval();
-        }
-
+        #region Add and remove Users
+        /// <summary>
+        /// Adds a user to the system.
+        /// If the handler is Working, the user isn't added at all.
+        /// </summary>
+        /// <param name="side">Side of the pose.</param>
+        /// <returns>True is the user was added to the handler.</returns>
         public bool NewUser(TT_SIDE side) {
             if (!Working) {
                 TimeTraveller nUser = new TimeTraveller(side);
@@ -238,6 +228,13 @@ namespace _499.InteractionHandlers {
             return false;
         }
 
+        /// <summary>
+        /// Removes a user from the handler.
+        /// If the handler is working, the removed user will be put on pedding
+        /// with its timeout timer on Retry mode.
+        /// </summary>
+        /// <param name="side">Pose side.</param>
+        /// <returns>True if the player was removed.</returns>
         public bool RemoveUser(TT_SIDE side) {
             TimeTraveller user = null;
             switch (side) {
@@ -322,31 +319,74 @@ namespace _499.InteractionHandlers {
                 if (UserNum < 0) {
                     Reset();
                 }
-                //Working = false;
             }
             return false;
         }
+        #endregion
+
+        #region TimeTravellers Timeout
+        /// <summary>
+        /// Aqui se entra si se llega a la condición de timeout.
+        /// Si se puede eliminar el usuario, lo hacemos; sino, se pone en modo retry.
+        /// Se repercuten los cambios en las colas de usuarios.
+        /// </summary>
+        /// <param name="traveller">Trigerring time traveller.</param>
+        private void TimeTravellerTimedOut(TimeTraveller traveller) {
+            try {
+                switch (traveller.Side) {
+                    case TT_SIDE.LEFT: _usersRewind.Dequeue(); break;
+                    case TT_SIDE.RIGHT: _usersFastForward.Dequeue(); break;
+                }
+            } catch (InvalidOperationException) {
+                traveller.Dispose();
+                return;
+            }
+
+            if (!Working) {
+                if (TriggerRemoveUserInteraction(traveller.Side)) {
+                    traveller.Dispose();
+                    return;
+                }
+            }
+            traveller.StartRemoval();
+            traveller.OnTimeOut -= TimeTravellerTimedOut;
+            traveller.OnTimeOut += TimeTravellerRetryRemoval;
+        }
+
+        /// <summary>
+        /// Lanzado con cada "Elapsed" del timer en modo retry.
+        /// Si se alcanza el máximo de Retries, se elimina directamente a 'traveller'.
+        /// </summary>
+        /// <param name="traveller">Trigerring time traveller.</param>
+        private void TimeTravellerRetryRemoval(TimeTraveller traveller) {
+            traveller.Retries++;
+            if (traveller.Retries > TimeTraveller.MAX_RETRIES) {
+                traveller.Dispose();
+                return;
+            }
+            if (!Working) {
+                if (TriggerRemoveUserInteraction(traveller.Side)) {
+                    traveller.Dispose();
+                    return;
+                }
+            }
+            traveller.StartRemoval();
+        }
+        #endregion
 
         #region Change Speed
         private bool IncreaseSpeed() {
             Working = true;
-            //if (Working) {
-                _prevStatus = _status;  // Al finalinar el knob, se volverá a este estado
-                _status = TT_STATUS.SPEEDING_UP;
-                return ChangeSpeed();
-            //}
-            //return false;
-
+            _prevStatus = _status;  // Al finalinar el knob, se volverá a este estado
+            _status = TT_STATUS.SPEEDING_UP;
+            return ChangeSpeed();
         }
 
         private bool DecreaseSpeed() {
             Working = true;
-            //if (Working) {
-                _prevStatus = _status;  // Al finalinar el knob, se volverá a este estado
-                _status = TT_STATUS.SPEEDING_DOWN;
-                return ChangeSpeed();
-            //}
-            //return false;
+            _prevStatus = _status;  // Al finalinar el knob, se volverá a este estado
+            _status = TT_STATUS.SPEEDING_DOWN;
+            return ChangeSpeed();
         }
 
         private bool ChangeSpeed() {
@@ -437,13 +477,15 @@ namespace _499.InteractionHandlers {
         }
         #endregion
 
-
-
         private void SendMidiControlChange(Midi.Control control, int value) {
             if (SendControlChange != null)
                 SendControlChange(control, value);
         }
 
+        /// <summary>
+        /// Gets the corresponding speed based on the status.
+        /// </summary>
+        /// <returns>Speed, midi value [0-127]</returns>
         private byte GetNewSpeed() {
             int newSpeed = 0;
             if (_status == TT_STATUS.SPEEDING_UP) {

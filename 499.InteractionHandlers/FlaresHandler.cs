@@ -127,8 +127,9 @@ namespace _499.InteractionHandlers {
         /// <param name="side">Triggered side</param>
         /// <returns></returns>
         private VideoClip[] GetCorrespondingVideoClips(FLARE_SIDE side) {
-            VideoClip nextLeft = _leftVideoClips[_nUsers % _leftVideoClips.Length];
-            VideoClip nextRight = _rightVideoClips[_nUsers % _rightVideoClips.Length];
+            System.Random rand = new Random();
+            VideoClip nextLeft = _leftVideoClips[rand.Next(_leftVideoClips.Length)];
+            VideoClip nextRight = _rightVideoClips[rand.Next(_rightVideoClips.Length)];
             VideoClip nullVideoClip = new VideoClip(-1, "null", 1, 0, Midi.Pitch.A0);  // Represents that none video is in tha position of the array.
             switch (side){
                 case FLARE_SIDE.LEFT:
