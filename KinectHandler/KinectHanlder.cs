@@ -141,6 +141,7 @@ namespace KinectHandler {
             Player p = GetPlayer(trackingId);
             if (p != null) {
                 INTERACTION interaction = INTERACTION.NONE;  // TODO: Poner en función de 'gestureName'
+                // Comenzamos el proceso de filtrado. Si nunca recibimos el evento 'OnSmoothedGesture' nunca lanzaremos el gesto.
                 p.SmoothInput(interaction, isGestureDetected);
             }
         }
@@ -189,6 +190,12 @@ namespace KinectHandler {
                             // if the current body is not tracked, pause its detector so we don't waste resources trying to get invalid gesture results
                             this.gestureDetectorList[i].IsPaused = trackingId == 0;
                         }
+
+
+
+                        // TODO: Necesario hacer esto????
+                        if (_players != null)
+                            _players[i].TrackingId = bodies[i].TrackingId;
                     }
                 }
             }
