@@ -9,15 +9,16 @@ namespace _499.InteractionHandlers {
 
     public class Spectrum {
         private Midi.Control _midiCC;
-
         public Midi.Control CCValue { get { return _midiCC; } }
         public int Id { get; set; }
         public int Layer { get; set; }
+        public byte HueValue { get; set; }  // Hue value associated with this spectrum (for the Glow layer)
 
-        public Spectrum(int id, int layer, Midi.Control cc) {
+        public Spectrum(int id, int layer, Midi.Control cc, byte hue) {
             Id = id;
             Layer = layer;
             _midiCC = cc;
+            HueValue = hue;
         }
     }
 
@@ -35,6 +36,8 @@ namespace _499.InteractionHandlers {
         private Spectrum _oldSpect;
         private SPECTRUM_HANDLER_STATUS _status = SPECTRUM_HANDLER_STATUS.IDLE;
         private MidiKnob _knobFade;
+        private MidiKnob _knobGlowHue;
+        private const byte BASE_HUE_VALUE = 77;
         private int _fadeInTime;
         private int _fadeOutTime;
         private Timer _duration; // Duration (without fadein and fadeout)
@@ -55,12 +58,15 @@ namespace _499.InteractionHandlers {
             _fadeOutTime = fadeOut;
             _knobFade = new MidiKnob(0, Midi.Control.Volume, 0, 127, _fadeInTime);
             _knobFade.SendMidiControlChange += SendMidiControlChange;
+            _knobGlowHue = new MidiKnob(0, Midi.Control.Pan, 0, 127, _fadeInTime);
+            _knobGlowHue.SendMidiControlChange += SendMidiControlChange;
             _duration = new Timer(duration);
             _duration.AutoReset = false;
             _duration.Elapsed += DurationEnded;
             _rester = new Timer(rest);
             _rester.AutoReset = false;
             _rester.Elapsed += RestingEnded;
+            Reset();
         }
 
         public void Reset() {
@@ -68,8 +74,13 @@ namespace _499.InteractionHandlers {
             _knobFade.Stop();
             _duration.Stop();
             _rester.Stop();
-            if (SendControlChange != null)
+            if (SendControlChange != null) {
                 SendControlChange(_knobFade.CCValue, 0);
+                SendControlChange(_knobGlowHue.CCValue, BASE_HUE_VALUE);
+                for (int i = 0; i < _spectrums.Length; i++) {
+                    SendControlChange(_spectrums[i].CCValue, 0);
+                }
+            }
 
         }
 
@@ -83,7 +94,13 @@ namespace _499.InteractionHandlers {
                 _knobFade.SetRange(0, 127);
                 _knobFade.Duration = _fadeInTime;
                 _knobFade.KnobEndRunning += FadeInEnded;
+
+                if (_knobGlowHue.IsRunning)
+                    _knobGlowHue.Stop();
+                _knobGlowHue.SetRange(_knobGlowHue.FinalValue, _currentSpectrum.HueValue);
+
                 _knobFade.Start();
+                _knobGlowHue.Start();
                 return true;
             } else if (_status == SPECTRUM_HANDLER_STATUS.SHOWING) {
                 _status = SPECTRUM_HANDLER_STATUS.BLOCKED;
@@ -98,7 +115,13 @@ namespace _499.InteractionHandlers {
                         _knobFade.SetRange(0, 127);
                         _knobFade.Duration = _fadeInTime;
                         _knobFade.KnobEndRunning += FadeInEndedFromShowing;
+
+                        if (_knobGlowHue.IsRunning)
+                            _knobGlowHue.Stop();
+                        _knobGlowHue.SetRange(_knobGlowHue.FinalValue, _currentSpectrum.HueValue);
+
                         _knobFade.Start();
+                        _knobGlowHue.Start();
                         return true;
                     }
                 } else if (_currentSpectrum.Layer < _oldSpect.Layer) {
@@ -111,7 +134,13 @@ namespace _499.InteractionHandlers {
                         _knobFade.SetRange(127, 0);
                         _knobFade.Duration = _fadeInTime;
                         _knobFade.KnobEndRunning += FadeInEndedFromShowing;
+
+                        if (_knobGlowHue.IsRunning)
+                            _knobGlowHue.Stop();
+                        _knobGlowHue.SetRange(_knobGlowHue.FinalValue, _currentSpectrum.HueValue);
+
                         _knobFade.Start();
+                        _knobGlowHue.Start();
                         return true;
                     }
                 }
@@ -174,7 +203,13 @@ namespace _499.InteractionHandlers {
                     _knobFade.SetRange(127, 0);
                     _knobFade.Duration = _fadeOutTime;
                     _knobFade.KnobEndRunning += FadeOutEnded;
+
+                    if (_knobGlowHue.IsRunning)
+                        _knobGlowHue.Stop();
+                    _knobGlowHue.SetRange(_knobGlowHue.FinalValue, BASE_HUE_VALUE);
+
                     _knobFade.Start();
+                    _knobGlowHue.Start();
                 }
             }
         }

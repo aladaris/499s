@@ -32,21 +32,24 @@ namespace _499.InteractionHandlers {
             _flares.RightVideoClips[1] = new VideoClip(1, "Flare_R_1", 6, 5, Pitch.B2);
             //_flares.RightVideoClips[2] = new VideoClip(2, "Flare_R_2", 1, 0, Pitch.B3);
             _flares.OnVideoClipPlay += OnVideoClipPlay;
+            _flares.Reset();
             // SPECTRUMS
             _spectrums = new SpectrumHandler(3, 2000, 500, 800, 1000);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
-            _spectrums.Spectrums[0] = new Spectrum(0, 2, Control.Volume);
-            _spectrums.Spectrums[1] = new Spectrum(1, 3, Control.TremoloLevel);
-            _spectrums.Spectrums[2] = new Spectrum(2, 4, Control.SustainPedal);
+            _spectrums.Spectrums[0] = new Spectrum(0, 2, Control.Volume, CalculateHueMidiValue(0.36f));
+            _spectrums.Spectrums[1] = new Spectrum(1, 3, Control.TremoloLevel, CalculateHueMidiValue(0.16f));
+            _spectrums.Spectrums[2] = new Spectrum(2, 4, Control.SustainPedal, CalculateHueMidiValue(0f));
             _spectrums.SendControlChange += OnControlChange;
+            _spectrums.Reset();
             // TIME TRAVEL
             _timeTravel = new TimeTravelHandler(Control.ModulationWheel, 6, 25, 150, 75);  // Valores dependientes de la configuracion de Resolume (Velocidad entre [0.5, 3]
             _timeTravel.SendControlChange += OnControlChange;
             _timeTravel.SendMidiOn += OnVideoClipPlay;
-            _timeTravel.GoIdle();
+            _timeTravel.Reset();
             // GLOW
             _glow = new GlowHandler(Control.CelesteLevel, 300, Control.ChorusLevel, 200);
             _glow.SendControlChange += OnControlChange;
             _glow.SendMidiOn += OnVideoClipPlay;
+            _glow.Reset();
 
         }
 
@@ -63,6 +66,13 @@ namespace _499.InteractionHandlers {
             }
         }
         #endregion
+
+        private byte CalculateHueMidiValue(float hue) {
+            if ((hue >= 0f) && (hue <= 1f)) {
+                return (byte)(Math.Round(hue * 127));
+            }
+            return 0;
+        }
 
         public string GetHandlersStatus() {
             string texto = "FlaresHandler:\n";

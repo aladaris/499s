@@ -35,13 +35,15 @@ namespace _499.InteractionHandlers {
         /// </summary>
         public bool IsRunning {
             get {
-                if (_timer.Enabled) {
-                    if (UpOrDown < 0) {
-                        if (_currentValue > _endVal)
-                            return true;
-                    } else if (UpOrDown > 0) {
-                        if (_currentValue < _endVal)
-                            return true;
+                if (_timer != null) {
+                    if (_timer.Enabled) {
+                        if (UpOrDown < 0) {
+                            if (_currentValue > _endVal)
+                                return true;
+                        } else if (UpOrDown > 0) {
+                            if (_currentValue < _endVal)
+                                return true;
+                        }
                     }
                 }
                 return false;
@@ -130,7 +132,8 @@ namespace _499.InteractionHandlers {
             if (!IsRunning) {
                 _timer.Stop();
                 _timer.Elapsed -= ClockTick;
-                SendMidiControlChange(_ccValue, _endVal);  // We send the last value
+                if (SendMidiControlChange != null)
+                    SendMidiControlChange(_ccValue, _endVal);  // We send the last value
                 if (KnobEndRunning != null) {
                     KnobEndRunning(_id);
                 }
