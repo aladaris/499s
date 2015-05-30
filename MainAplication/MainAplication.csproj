@@ -86,9 +86,9 @@
       <Project>{cb61d08b-1241-45b4-b133-91f1f8e47893}</Project>
       <Name>499.InteractionHandlers</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Lib.GestureTrigger\Lib.GestureTrigger.csproj">
-      <Project>{974f640f-96f4-46ce-a740-a93f68c79c27}</Project>
-      <Name>Lib.GestureTrigger</Name>
+    <ProjectReference Include="..\KinectHandler\KinectHandler.csproj">
+      <Project>{101483de-f6a5-49d4-ad10-7c4b7e43b1f3}</Project>
+      <Name>KinectHandler</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
