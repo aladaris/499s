@@ -77,6 +77,7 @@ namespace _499.InteractionHandlers {
         public Midi.Control CCValue { get; set; }
         public Midi.Pitch FFMidinote { get; set; }
         public Midi.Pitch RewMidinote { get; set; }
+        public TT_STATUS Status { get { return _status; } }
         public bool Working {
             get { return _working; }
             private set {

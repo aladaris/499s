@@ -17,11 +17,9 @@ namespace _499.InteractionHandlers {
         private int _nUsers = 0;
         private const int MAXUSERS = 6;
         private MidiKnob _knobTransparency;
-        private MidiKnob _knobParameters1;
         private readonly Midi.Pitch _glowClipTriggerNote;  // Note to trigger the glow clip in Resolume
         private byte _currentTransparencyValue = 0;
         private byte _transparencyDelta = (byte)(127 / MAXUSERS);
-        private byte _parameters1Delta = (byte)(127 / MAXUSERS);  // TODO_ Quitar paramters1  ... Solo usar el knob de la transparencia, asignándolos  a los parámteros necesarios en los rangos y modos necesarios
         private Timer _loopUpdaterTimer;
         private GLOW_HANDLER_STATUS _status;
         private int _pendingUsers = 0;  // Usuarios añadidos/eliminados mientras se estaba en BLOCKED?
@@ -51,14 +49,6 @@ namespace _499.InteractionHandlers {
                 _status = value;
             }
         }
-        public byte LatestParameters1KnobValue {
-            get{
-                if (_knobParameters1 != null){
-                    return _knobParameters1.FinalValue;
-                }
-                return 255;
-            }
-        }
         // events
         public event SendMidiControlChangeHandler SendControlChange;
         public event PlayVideoClipHandler SendMidiOn;
@@ -67,9 +57,6 @@ namespace _499.InteractionHandlers {
             _knobTransparency = new MidiKnob(0, transparency_cc, 0, 127, transparency_duration);
             _knobTransparency.KnobEndRunning += OnInitialTransparencyKnobEnd;
             _knobTransparency.SendMidiControlChange += SendMidiControlChange;
-            _knobParameters1 = new MidiKnob(1, parameters1_cc, 0, 127, parameters1_duration);
-            _knobParameters1.KnobEndRunning += OnParameters1KnobEnd;
-            _knobParameters1.SendMidiControlChange += SendMidiControlChange;
             _loopUpdaterTimer = new Timer(1000);
             _loopUpdaterTimer.Elapsed += LoopTimerTick;
             _glowClipTriggerNote = glow_trigger_note;
@@ -102,7 +89,7 @@ namespace _499.InteractionHandlers {
         /// </summary>
         /// <returns></returns>
         public bool RemoveUser() {
-            UserNum--;
+            UserNum = ((UserNum - 1) < 0) ? 0 : UserNum - 1;
             _pendingUsers++;
             switch (Status) {
                 case GLOW_HANDLER_STATUS.SHOWING:
@@ -123,7 +110,7 @@ namespace _499.InteractionHandlers {
         }
 
         /// <summary>
-        /// Updates the glow transparency and Parameters1
+        /// Updates the glow transparency
         /// </summary>
         /// <returns></returns>
         private bool UpdateGlowLoop() {
@@ -135,16 +122,6 @@ namespace _499.InteractionHandlers {
                 case GLOW_HANDLER_STATUS.SHOWING:
                     if (_nUsers > 0) {
                         SetGlowTransparency();
-                        /*
-                        if (!_knobParameters1.IsRunning) {
-                            Status = GLOW_HANDLER_STATUS.BLOCKED;
-                            byte latest = LatestParameters1KnobValue;
-                            if (latest <= 127) {
-                                _knobParameters1.SetRange(latest, GetCorrespondingParameters1Value());
-                                _knobParameters1.Start();
-                            }
-                        }
-                        */
                     } else {
                         StartFadeOut();
                     }
@@ -222,20 +199,13 @@ namespace _499.InteractionHandlers {
         }
 
         /// <summary>
-        /// End of Fade In proccess. Starts the Parameters1 initialization
+        /// End of Fade In proccess.
         /// </summary>
         /// <param name="id"></param>
         private void OnInitialTransparencyKnobEnd(int id) {
             _knobTransparency.KnobEndRunning -= OnInitialTransparencyKnobEnd;
             if (Status == GLOW_HANDLER_STATUS.BLOCKED) {
                 _currentTransparencyValue = _knobTransparency.FinalValue;
-                if (!_knobParameters1.IsRunning) {
-                    byte latest = LatestParameters1KnobValue;
-                    if (latest <= 127) {
-                        _knobParameters1.SetRange(latest, GetCorrespondingParameters1Value());
-                        _knobParameters1.Start();
-                    }
-                }
             }
 
         }
@@ -264,25 +234,6 @@ namespace _499.InteractionHandlers {
                 if (UserNum <= 0)
                     UpdateGlowLoop();
             }
-        }
-        #endregion
-
-        #region Parameters1
-        private void ResetParameters1Values() {
-            // TODO: Ya no se muestra el glow (Transparency a CERO). Reseteamos los parámetros
-        }
-
-        private void OnParameters1KnobEnd(int id) {
-            if (Status == GLOW_HANDLER_STATUS.BLOCKED) {
-                Status = GLOW_HANDLER_STATUS.SHOWING;
-            }
-        }
-
-        
-
-        private byte GetCorrespondingParameters1Value() {
-            byte result =(byte)(_parameters1Delta * UserNum);
-            return result;
         }
         #endregion
 

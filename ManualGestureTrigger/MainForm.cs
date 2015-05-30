@@ -15,12 +15,12 @@ using _499.InteractionHandlers;
 namespace ManualGestureTrigger {
     public partial class MainForm : Form {
 
-        public SystemHandler _mainHandler;
+        public InteractionSystemHandler _mainHandler;
 
         public MainForm() {
             InitializeComponent();
             LoadMidiOutDevicesComboBox();
-            _mainHandler = new SystemHandler(2, Channel.Channel1);
+            _mainHandler = new InteractionSystemHandler(2, Channel.Channel1);
         }
 
         private void LoadMidiOutDevicesComboBox() {

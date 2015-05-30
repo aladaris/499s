@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "499.InteractionHandlers", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinectBasis", "KinectBasis\KinectBasis.csproj", "{F37756E5-33BE-405F-B3E3-870700C89BAD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainAplication", "MainAplication\MainAplication.csproj", "{393D2BCB-F91B-4B45-B349-DB02C9FC6998}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{F37756E5-33BE-405F-B3E3-870700C89BAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F37756E5-33BE-405F-B3E3-870700C89BAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F37756E5-33BE-405F-B3E3-870700C89BAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{393D2BCB-F91B-4B45-B349-DB02C9FC6998}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{393D2BCB-F91B-4B45-B349-DB02C9FC6998}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{393D2BCB-F91B-4B45-B349-DB02C9FC6998}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{393D2BCB-F91B-4B45-B349-DB02C9FC6998}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
