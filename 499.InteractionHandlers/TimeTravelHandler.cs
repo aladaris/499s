@@ -79,6 +79,7 @@ namespace _499.InteractionHandlers {
         public Midi.Pitch FFMidinote { get; set; }
         public Midi.Pitch RewMidinote { get; set; }
         public bool Working { get; set; }
+        // TODO: Working timeout. Si esta N tiempo en Working, Resetear el TimeTravel.
 
         public TimeTravelHandler(Midi.Control cc_value, int max_users, byte idle_speed_value = 25, int speed_change_duration = 500, int direction_change_duration = 300, Midi.Pitch rewind = Midi.Pitch.D0, Midi.Pitch fforward = Midi.Pitch.D1) {
             _maxUsers = max_users;
@@ -268,7 +269,7 @@ namespace _499.InteractionHandlers {
         }
 
         public bool TriggerRemoveUserInteraction(TT_SIDE side) {
-            if ((!Working) && (!_knobSpeed.IsRunning)) {  // TODO: Si está añadiendo un usuario; no va a sacar a uno que se va   <======================================================
+            if ((!Working) && (!_knobSpeed.IsRunning)) {
                 switch (_status) {
                     case TT_STATUS.IDLE:
                         if (UserNum >= 0) {

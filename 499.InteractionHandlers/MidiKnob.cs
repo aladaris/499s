@@ -23,7 +23,7 @@ namespace _499.InteractionHandlers {
         private byte _currentValue;
         //private sbyte _upOrDown;
         private byte _stepsCount;  // Numero de pasos en el intervalo [_initVal, _endVal]
-        private int _duration;  // Milisegundos
+        private double _duration;  // Milisegundos
         private Timer _timer;
         // Events
         public delegate void KnobEndRunningHandler(int id);
@@ -50,7 +50,7 @@ namespace _499.InteractionHandlers {
         /// <summary>
         /// Time elapsed from initial value to the end one.
         /// </summary>
-        public int Duration { get { return _duration; } set { _duration = value; } }
+        public double Duration { get { return _duration; } set { _duration = value; } }
         /// <summary>
         /// -1 From higher to lower value. 1 From lower to higher value.
         /// </summary>
@@ -67,7 +67,7 @@ namespace _499.InteractionHandlers {
         /// <param name="init">Initial value to send</param>
         /// <param name="end">Final value to send</param>
         /// <param name="time">Running time in milliseconds</param>
-        public MidiKnob(int id, Control cc_value, byte init, byte end, int time) {
+        public MidiKnob(int id, Control cc_value, byte init, byte end, double time) {
             _id = id;
             //_midiOut = midi_out;
             _ccValue = cc_value;

@@ -39,10 +39,6 @@ namespace KinectBasis {
             }
         }
 
-        private void GestureChanged(string gestureName, bool isBodyTrackingIdValid, bool isGestureDetected, float detectionConfidence) {
-            System.Windows.Forms.MessageBox.Show(gestureName + " tracked? " + isBodyTrackingIdValid.ToString() + " detected? " + isGestureDetected.ToString() + " confidence: " + detectionConfidence.ToString());  // DEBUG
-        }
-
         public void Dispose() {
             if (this.bodyFrameReader != null) {
                 // BodyFrameReader is IDisposable
@@ -66,6 +62,10 @@ namespace KinectBasis {
             }
         }
 
+        private void GestureChanged(string gestureName, bool isBodyTrackingIdValid, bool isGestureDetected, float detectionConfidence) {
+            System.Windows.Forms.MessageBox.Show(gestureName + " tracked? " + isBodyTrackingIdValid.ToString() + " detected? " + isGestureDetected.ToString() + " confidence: " + detectionConfidence.ToString());  // DEBUG
+        }
+
         /// <summary>
         /// Handles the event when the sensor becomes unavailable (e.g. paused, closed, unplugged).
         /// </summary>
@@ -82,7 +82,6 @@ namespace KinectBasis {
         /// <param name="e">event arguments</param>
         private void Reader_BodyFrameArrived(object sender, BodyFrameArrivedEventArgs e) {
             bool dataReceived = false;
-
             using (BodyFrame bodyFrame = e.FrameReference.AcquireFrame()) {
                 if (bodyFrame != null) {
                     if (this.bodies == null) {

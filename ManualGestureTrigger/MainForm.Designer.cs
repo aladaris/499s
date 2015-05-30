@@ -358,7 +358,7 @@
             // 
             this.richTextBox1.Location = new System.Drawing.Point(518, 74);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(247, 179);
+            this.richTextBox1.Size = new System.Drawing.Size(247, 296);
             this.richTextBox1.TabIndex = 6;
             this.richTextBox1.Text = " Click to update handler info...";
             this.richTextBox1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.richTextBox1_MouseUp);

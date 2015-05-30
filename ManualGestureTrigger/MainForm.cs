@@ -62,7 +62,18 @@ namespace ManualGestureTrigger {
         }
 
         private void AirHugHandler(object sender, EventArgs e) {
-
+            CheckBox cb = sender as CheckBox;
+            if (cb != null) {
+                if (cb.Checked) {
+                    _mainHandler.NewUserGlow();
+                    // GUI
+                    _499.InteractionHandlers.Utils.DisableAllButMe(cb, typeof(CheckBox));
+                } else {
+                    _mainHandler.RemoveUserGlow();
+                    // GUI
+                    _499.InteractionHandlers.Utils.EnableAllButMe(cb, typeof(CheckBox));
+                }
+            }
         }
 
         private void AerobicsHandler(object sender, EventArgs e) {

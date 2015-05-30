@@ -14,6 +14,7 @@ namespace _499.InteractionHandlers {
         FlaresHandler _flares;
         SpectrumHandler _spectrums;
         TimeTravelHandler _timeTravel;
+        GlowHandler _glow;
 
         public SystemHandler(int midi_out_id, Channel channel) {
             if ((midi_out_id >= 0) && (midi_out_id < OutputDevice.InstalledDevices.Count)) {
@@ -42,6 +43,10 @@ namespace _499.InteractionHandlers {
             _timeTravel.SendControlChange += OnControlChange;
             _timeTravel.SendMidiOn += OnVideoClipPlay;
             _timeTravel.GoIdle();
+            // GLOW
+            _glow = new GlowHandler(Control.CelesteLevel, 300, Control.ChorusLevel, 200);
+            _glow.SendControlChange += OnControlChange;
+
         }
 
         #region Properties
@@ -76,6 +81,15 @@ namespace _499.InteractionHandlers {
             texto += "  TotalCount = " + _timeTravel.TotalCount.ToString() + '\n';
             texto += "  Working = " + _timeTravel.Working.ToString() + '\n';
 
+            texto += "\nGlowHanlder:\n";
+            texto += "  UserNum = " + _glow.UserNum.ToString() + '\n';
+            texto += "  Status = ";
+            switch (_glow.Status) {
+                case GLOW_HANDLER_STATUS.IDLE: texto += "IDLE\n"; break;
+                case GLOW_HANDLER_STATUS.BLOCKED: texto += "BLOCKED\n"; break;
+                case GLOW_HANDLER_STATUS.SHOWING: texto += "SHOWING\n"; break;
+            }
+
             return texto;
         }
 
@@ -106,6 +120,15 @@ namespace _499.InteractionHandlers {
         }
         #endregion
 
+        #region Glow
+        public bool NewUserGlow() {
+            return _glow.NewUser();
+        }
+        public bool RemoveUserGlow() {
+            return _glow.RemoveUser();
+        }
+        #endregion
+
         #region EventHandlers
         private void OnVideoClipPlay(Pitch note) {
             if (_midiOut != null)
@@ -121,6 +144,7 @@ namespace _499.InteractionHandlers {
                     _midiOut.SendControlChange(_channel, control, value);
         }
         #endregion
+
 
     }
 }
