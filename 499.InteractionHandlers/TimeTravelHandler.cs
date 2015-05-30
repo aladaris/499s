@@ -69,18 +69,29 @@ namespace _499.InteractionHandlers {
         private MidiKnob _knobSpeed;
         private readonly int _directionChangeDuration;
         private readonly int _speedChangeDuration;
-        // events
-        public event SendMidiControlChangeHandler SendControlChange;
-        public event PlayVideoClipHandler SendMidiOn;  // TODO: Refactor el nombre. Algo como Send MidiOn
-
+        private bool _working = false;
+        private Timer _workingTimeout;
+        private const double WORKING_TIMEOUT_VALUE = 3000;
         public int UserNum { get { return _usersRewind.Count + _usersFastForward.Count; } }
         public int TotalCount { get { return _usersFastForward.Count - _usersRewind.Count; } }
         public Midi.Control CCValue { get; set; }
         public Midi.Pitch FFMidinote { get; set; }
         public Midi.Pitch RewMidinote { get; set; }
-        public bool Working { get; set; }
-        // TODO: Working timeout. Si esta N tiempo en Working, Resetear el TimeTravel.
-
+        public bool Working {
+            get { return _working; }
+            private set {
+                _working = value;
+                if (_workingTimeout != null) {
+                    if (_working)
+                        _workingTimeout.Start();
+                    else
+                        _workingTimeout.Stop();
+                }
+            }
+        }
+        // events
+        public event SendMidiControlChangeHandler SendControlChange;
+        public event PlayVideoClipHandler SendMidiOn;
         public TimeTravelHandler(Midi.Control cc_value, int max_users, byte idle_speed_value = 25, int speed_change_duration = 500, int direction_change_duration = 300, Midi.Pitch rewind = Midi.Pitch.D0, Midi.Pitch fforward = Midi.Pitch.D1) {
             _maxUsers = max_users;
             _speedDelta = (byte)(_maxSpeed / (byte)_maxUsers);
@@ -95,16 +106,24 @@ namespace _499.InteractionHandlers {
             Working = false;
             _usersRewind = new Queue<TimeTraveller>();
             _usersFastForward = new Queue<TimeTraveller>();
+
+            _workingTimeout = new Timer(WORKING_TIMEOUT_VALUE);
+            _workingTimeout.Elapsed += OnWorkingTimeout;
+
             GoIdle();
+        }
+
+        private void OnWorkingTimeout(object sender, ElapsedEventArgs e) {
+            if (Working) {
+                Reset();
+            }
         }
 
         /// <summary>
         /// Devuelve el sistema al estado actual.
         /// </summary>
         public void Reset() {
-            _currentSpeed = 0;
-            GoIdle();
-            _prevStatus = TT_STATUS.IDLE;
+            _knobSpeed.Stop();
             // TODO: Mirar este clear y los timers de los TimeTravellers
             while (_usersFastForward.Count > 0) {
                 _usersFastForward.Dequeue().Dispose();
@@ -114,19 +133,30 @@ namespace _499.InteractionHandlers {
                 _usersRewind.Dequeue().Dispose();
             }
             _usersRewind.Clear();
+            _status = TT_STATUS.IDLE;
+            GoIdle(true);
+            _prevStatus = TT_STATUS.IDLE;
+            Working = false;
         }
 
         /// <summary>
         /// Goes (smoothly) to the IDLE state, no matter what.
         /// </summary>
-        public void GoIdle() {
+        /// <param name="hard">If true, the change is not smooth.</param>
+        public void GoIdle(bool hard = false) {
             if ((_status == TT_STATUS.IDLE) || (_status == TT_STATUS.FASTFORWARD)) {
-                if (!_knobSpeed.IsRunning) {
-                    _knobSpeed.Duration = _speedChangeDuration / 2;
-                    _knobSpeed.SetRange(_currentSpeed, _idleSpeed);
-                    _knobSpeed.KnobEndRunning += EndSpeedChanging;
-                    _status = TT_STATUS.SPEEDING_UP;
-                    _knobSpeed.Start();
+                if (!hard) {
+                    if (!_knobSpeed.IsRunning) {
+                        _knobSpeed.Duration = _speedChangeDuration / 2;
+                        _knobSpeed.SetRange(_currentSpeed, _idleSpeed);
+                        _knobSpeed.KnobEndRunning += EndSpeedChanging;
+                        _status = TT_STATUS.SPEEDING_UP;
+                        _knobSpeed.Start();
+                    }
+                } else {
+                    if (SendControlChange != null) {
+                        SendControlChange(CCValue, _idleSpeed);
+                    }
                 }
             }
             if (SendMidiOn != null)

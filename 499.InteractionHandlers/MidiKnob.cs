@@ -98,6 +98,11 @@ namespace _499.InteractionHandlers {
             _timer.Start();
         }
 
+        public void Stop() {
+            _timer.Stop();
+            _timer.Elapsed -= ClockTick;
+        }
+
         /// <summary>
         /// Set the knob range of action.
         /// Also sets the UpOrDown value.
