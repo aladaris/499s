@@ -46,6 +46,7 @@ namespace _499.InteractionHandlers {
             // GLOW
             _glow = new GlowHandler(Control.CelesteLevel, 300, Control.ChorusLevel, 200);
             _glow.SendControlChange += OnControlChange;
+            _glow.SendMidiOn += OnVideoClipPlay;
 
         }
 

@@ -63,6 +63,16 @@ namespace _499.InteractionHandlers {
             _rester.Elapsed += RestingEnded;
         }
 
+        public void Reset() {
+            _nUsers = 0;
+            _knobFade.Stop();
+            _duration.Stop();
+            _rester.Stop();
+            if (SendControlChange != null)
+                SendControlChange(_knobFade.CCValue, 0);
+
+        }
+
         public bool NewUser() {
             _nUsers++;
             if (_status == SPECTRUM_HANDLER_STATUS.IDLE) {

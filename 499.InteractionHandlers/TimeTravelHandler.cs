@@ -113,12 +113,6 @@ namespace _499.InteractionHandlers {
             GoIdle();
         }
 
-        private void OnWorkingTimeout(object sender, ElapsedEventArgs e) {
-            if (Working) {
-                Reset();
-            }
-        }
-
         /// <summary>
         /// Devuelve el sistema al estado actual.
         /// </summary>
@@ -424,7 +418,7 @@ namespace _499.InteractionHandlers {
             if (Working) {
                 if (!_knobSpeed.IsRunning) {
                     _knobSpeed.Duration = _speedChangeDuration;
-                    _knobSpeed.SetRange(_currentSpeed, GetNewSpeed());
+                    _knobSpeed.SetRange(_currentSpeed, GetCorrespondingSpeed());
                     _knobSpeed.KnobEndRunning += EndSpeedChanging;
                     _knobSpeed.Start();
                     return true;
@@ -437,7 +431,7 @@ namespace _499.InteractionHandlers {
             if (Working) {
                 if ((_status == TT_STATUS.SPEEDING_UP) || (_status == TT_STATUS.SPEEDING_DOWN)) {
                     _knobSpeed.KnobEndRunning -= EndSpeedChanging;
-                    _currentSpeed = GetNewSpeed();
+                    _currentSpeed = GetCorrespondingSpeed();
                     _status = _prevStatus;
                     Working = false;
                 }
@@ -508,16 +502,11 @@ namespace _499.InteractionHandlers {
         }
         #endregion
 
-        private void SendMidiControlChange(Midi.Control control, int value) {
-            if (SendControlChange != null)
-                SendControlChange(control, value);
-        }
-
         /// <summary>
         /// Gets the corresponding speed based on the status.
         /// </summary>
         /// <returns>Speed, midi value [0-127]</returns>
-        private byte GetNewSpeed() {
+        private byte GetCorrespondingSpeed() {
             int newSpeed = 0;
             if (_status == TT_STATUS.SPEEDING_UP) {
                 newSpeed = _currentSpeed + _speedDelta;
@@ -529,6 +518,17 @@ namespace _499.InteractionHandlers {
                     newSpeed = _minSpeed;
             }
             return (byte)newSpeed;
+        }
+
+        private void SendMidiControlChange(Midi.Control control, int value) {
+            if (SendControlChange != null)
+                SendControlChange(control, value);
+        }
+
+        private void OnWorkingTimeout(object sender, ElapsedEventArgs e) {
+            if (Working) {
+                Reset();
+            }
         }
 
     }

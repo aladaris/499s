@@ -39,6 +39,12 @@ namespace _499.InteractionHandlers {
             _rightVideoClips = new VideoClip[nFlaresRight];
         }
 
+        public void Reset() {
+            _nUsers = 0;
+            _runningVideoClipsLeft = 0;
+            _runningVideoClipsRight = 0;
+        }
+
         public bool NewUser(FLARE_SIDE side) {
             if (_nUsers + 1 > _maxUsers)
                 return false;

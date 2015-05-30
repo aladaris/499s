@@ -18,6 +18,7 @@ namespace _499.InteractionHandlers {
         private const int MAXUSERS = 6;
         private MidiKnob _knobTransparency;
         private MidiKnob _knobParameters1;
+        private readonly Midi.Pitch _glowClipTriggerNote;  // Note to trigger the glow clip in Resolume
         private byte _currentTransparencyValue = 0;
         private byte _transparencyDelta = (byte)(127 / MAXUSERS);
         private byte _parameters1Delta = (byte)(127 / MAXUSERS);  // TODO_ Quitar paramters1  ... Solo usar el knob de la transparencia, asignándolos  a los parámteros necesarios en los rangos y modos necesarios
@@ -60,8 +61,9 @@ namespace _499.InteractionHandlers {
         }
         // events
         public event SendMidiControlChangeHandler SendControlChange;
+        public event PlayVideoClipHandler SendMidiOn;
 
-        public GlowHandler(Midi.Control transparency_cc = Midi.Control.CelesteLevel, double transparency_duration = 300, Midi.Control parameters1_cc = Midi.Control.ChorusLevel, double parameters1_duration = 200) {
+        public GlowHandler(Midi.Control transparency_cc = Midi.Control.CelesteLevel, double transparency_duration = 300, Midi.Control parameters1_cc = Midi.Control.ChorusLevel, double parameters1_duration = 200,Midi.Pitch glow_trigger_note = Midi.Pitch.G1) {
             _knobTransparency = new MidiKnob(0, transparency_cc, 0, 127, transparency_duration);
             _knobTransparency.KnobEndRunning += OnInitialTransparencyKnobEnd;
             _knobTransparency.SendMidiControlChange += SendMidiControlChange;
@@ -70,6 +72,7 @@ namespace _499.InteractionHandlers {
             _knobParameters1.SendMidiControlChange += SendMidiControlChange;
             _loopUpdaterTimer = new Timer(1000);
             _loopUpdaterTimer.Elapsed += LoopTimerTick;
+            _glowClipTriggerNote = glow_trigger_note;
             Status = GLOW_HANDLER_STATUS.IDLE;
         }
 
@@ -106,6 +109,17 @@ namespace _499.InteractionHandlers {
                     return UpdateGlowLoop();
             }
             return false;
+        }
+
+        public void Reset() {
+            _status = GLOW_HANDLER_STATUS.BLOCKED;
+            UserNum = 0;
+            _knobTransparency.Stop();
+            if (SendControlChange != null)
+                SendControlChange(_knobTransparency.CCValue, 0);
+            if (SendMidiOn != null)
+                SendMidiOn(_glowClipTriggerNote);
+            _status = GLOW_HANDLER_STATUS.IDLE;
         }
 
         /// <summary>
