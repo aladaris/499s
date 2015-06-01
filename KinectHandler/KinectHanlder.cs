@@ -9,58 +9,82 @@ using System.Timers;
 
 namespace KinectHandler {
 
-    public enum INTERACTION { NONE, FLARE, GLOW, TIMETRAVEL, SPECTRUM }
-    public delegate void SmoothedInput (ulong trackingId, INTERACTION interaction);
+    public enum INTERACTION { NONE, FLARES, FLARE_L, FLARE_R, FLARE_C, TIMETRAVEL_REW, TIMETRAVEL_FF, SPECTRUM, GLOW }
+    public delegate void GestureTrigger(int ui_id, ulong trackingId, INTERACTION interaction, bool detected);
 
     class Player : IDisposable {
-        public ulong TrackingId { get; set; }
-        public INTERACTION Interaction { get; private set; }
-        public Timer SmoothTimer { get; private set; }
-        public event SmoothedInput OnSmoothedGesture;
-        public bool Detected { get; private set; }
+        private Timer _timeoutTimer;
 
-        public Player(ulong trackingId, INTERACTION interaction = INTERACTION.NONE, double smooth_time = 200) {
+        public int UiId { get; private set; }
+        public ulong TrackingId { get; set; }
+        public INTERACTION Interaction { get; set; }
+        public bool Detected { get; set; }
+        public bool TimmingOut { get { return _timeoutTimer.Enabled; } }
+        // events
+        public event GestureTrigger GestureTriggered;
+
+        public Player(int ui_id, ulong trackingId, INTERACTION interaction = INTERACTION.NONE, double timeout_time = 250) {
+            UiId = ui_id;
             TrackingId = trackingId;
             Interaction = interaction;
-            SmoothTimer = new Timer(smooth_time);
-            SmoothTimer.Elapsed += SmoothTimerElapsed;
+            Detected = false;
+            _timeoutTimer = new Timer(timeout_time);
+            _timeoutTimer.AutoReset = false;
+            _timeoutTimer.Elapsed += OnTimeout;
+            _timeoutTimer.Stop();
         }
 
-        public void SmoothInput(INTERACTION interaction, bool detected) {
-            if (SmoothTimer != null) {
-                // Comenzamos el timer
-                if (!SmoothTimer.Enabled) {
-                    Interaction = interaction;
-                    SmoothTimer.Start();
-                // Si el timer ya estaba funcionando, paramos todo el proceso de detección.
-                } else {
-                    if (Detected != detected) {
-                        SmoothTimer.Stop();
-                        Interaction = INTERACTION.NONE;
+        public void SetTimmedInteraction(INTERACTION interaction, bool detected) {
+            if (!this.TimmingOut) {  // Sin hacer timeout
+                if (!this.Detected) {  // Sin ningún estado detectado
+                    if (detected) {
+                        this.Interaction = interaction;
+                        this.Detected = detected;
+                        this._timeoutTimer.AutoReset = false;
+                        this._timeoutTimer.Start();
                     }
                 }
-                Detected = detected;
+            } else {  // Ya estamos haciendo timeout
+                if (this.Detected) {
+                    this._timeoutTimer.Stop();
+                    if (detected) {  // Interrumpimos Flare_L o Flare_R en favor de Flare_C
+                        if ((((this.Interaction == INTERACTION.FLARE_L) || (this.Interaction == INTERACTION.FLARE_R)) && (interaction == INTERACTION.FLARE_C)) || 
+                        (((this.Interaction == INTERACTION.TIMETRAVEL_REW) || (this.Interaction == INTERACTION.TIMETRAVEL_FF)) && (interaction == INTERACTION.GLOW))){
+                            this.Interaction = interaction;
+                            this.Detected = detected;
+                            if (GestureTriggered != null)
+                                GestureTriggered(UiId, TrackingId, interaction, detected);
+                        }
+                    }
+                }
             }
         }
 
+        public void Reset() {
+            Interaction = INTERACTION.NONE;
+            Detected = false;
+            _timeoutTimer.Stop();
+        }
+
         public void Dispose() {
-            if (SmoothTimer != null) {
-                SmoothTimer.Stop();
-                SmoothTimer.Dispose();
+            if (_timeoutTimer != null) {
+                _timeoutTimer.Stop();
+                _timeoutTimer.Dispose();
                 TrackingId = 0;
                 Interaction = INTERACTION.NONE;
             }
         }
 
-        private void SmoothTimerElapsed(object sender, ElapsedEventArgs e) {
-            if (OnSmoothedGesture != null) {
-                OnSmoothedGesture(TrackingId, Interaction);
-                SmoothTimer.Stop();
+        private void OnTimeout(object sender, ElapsedEventArgs e) {
+            if (Detected) {
+                if (GestureTriggered != null)
+                    GestureTriggered(UiId, TrackingId, Interaction, Detected);
             }
+            _timeoutTimer.Stop();
         }
     }
 
-    class KinectHanlder : IDisposable {
+    public class KinectHanlder : IDisposable {
         /// <summary> Active Kinect sensor </summary>
         private KinectSensor kinectSensor = null;
         /// <summary> Array for the bodies (Kinect will track up to 6 people simultaneously) </summary>
@@ -70,6 +94,8 @@ namespace KinectHandler {
         /// <summary> List of gesture detectors, there will be one detector created for each potential body (max of 6) </summary>
         private List<GestureDetector> gestureDetectorList = null;
         private List<Player> _players = null;
+        public event GestureTrigger OnGestureTrigger;
+        public event EventHandler<IsAvailableChangedEventArgs> OnKinectAviableChange;
 
         public KinectHanlder() {
             // only one sensor is currently supported
@@ -93,18 +119,29 @@ namespace KinectHandler {
                 GestureDetector detector = new GestureDetector(this.kinectSensor);
                 detector.GestureDetectedChanged += GestureChanged;
                 this.gestureDetectorList.Add(detector);
-                Player p = new Player((ulong)i);
-                p.OnSmoothedGesture += SmoothedGesture;
+                Player p = new Player(i, (ulong)i);
+                p.GestureTriggered += OnPlayerGestureTrigger;
                 _players.Add(p);
             }
         }
 
-        private void SmoothedGesture(ulong trackingId, INTERACTION interaction) {
+        private void OnPlayerGestureTrigger(int ui_id, ulong trackingId, INTERACTION interaction, bool detected) {
             Player p = GetPlayer(trackingId);
             if (p != null) {
-                if (p.Detected) {
-                    // TODO: AQUÍ LANZAMOS EL GESTO
-                }
+                if (OnGestureTrigger != null)
+                    OnGestureTrigger(ui_id, trackingId, interaction, detected);
+            }
+        }
+
+        public void Reset() {
+            if (kinectSensor!= null)
+                if (kinectSensor.IsOpen)
+                    kinectSensor.Close();
+            kinectSensor = KinectSensor.GetDefault();
+            kinectSensor.Open();
+            bodyFrameReader = kinectSensor.BodyFrameSource.OpenReader();
+            foreach (Player p in _players) {
+                p.Reset();
             }
         }
 
@@ -140,9 +177,58 @@ namespace KinectHandler {
         private void GestureChanged(string gestureName, ulong trackingId, bool isGestureDetected, float detectionConfidence) {
             Player p = GetPlayer(trackingId);
             if (p != null) {
-                INTERACTION interaction = INTERACTION.NONE;  // TODO: Poner en función de 'gestureName'
-                // Comenzamos el proceso de filtrado. Si nunca recibimos el evento 'OnSmoothedGesture' nunca lanzaremos el gesto.
-                p.SmoothInput(interaction, isGestureDetected);
+
+                // Asociamos gestureName con Interacciones
+                INTERACTION interaction = INTERACTION.NONE;
+                if (gestureName.Equals("Arm_T_Left")) {
+                    interaction = INTERACTION.TIMETRAVEL_REW;
+                } else if (gestureName.Equals("Arm_T_Right")) {
+                    interaction = INTERACTION.TIMETRAVEL_FF;
+                } else if (gestureName.Equals("Arms_T")) {
+                    interaction = INTERACTION.GLOW;
+                } else if (gestureName.Equals("Arm_Y_Left")) {
+                    interaction = INTERACTION.FLARE_L;
+                } else if (gestureName.Equals("Arm_Y_Right")) {
+                    interaction = INTERACTION.FLARE_R;
+                } else if (gestureName.Equals("Arms_Y")) {
+                    interaction = INTERACTION.FLARE_C;
+                } else if (gestureName.Equals("Egiptian")) {
+                    interaction = INTERACTION.SPECTRUM;
+                }
+                if (interaction == INTERACTION.NONE)
+                    return;
+
+                // Player no estaba haciendo nada
+                if (p.Interaction == INTERACTION.NONE) {
+                    if ((!p.Detected)&&(isGestureDetected)) {  // De nada a hacer un gesto
+                        // Spectrum (y las dos FULL) es la única que se puede lanzar directamente
+                        if ((interaction == INTERACTION.SPECTRUM) || (interaction == INTERACTION.FLARE_C) || (interaction == INTERACTION.GLOW)) {
+                            p.Detected = isGestureDetected;
+                            p.Interaction = interaction;
+                            if (OnGestureTrigger != null)
+                                OnGestureTrigger(p.UiId, p.TrackingId, p.Interaction, p.Detected);
+                        // Aqui van las interacciones que necesitan timeout
+                        } else if (interaction != INTERACTION.NONE) {
+                            p.SetTimmedInteraction(interaction, isGestureDetected);
+                        }
+                    }
+                // El Player ya tiene una interacción asociada
+                } else {
+                    if ((((p.Interaction == INTERACTION.FLARE_L) || (p.Interaction == INTERACTION.FLARE_R)) && (interaction == INTERACTION.FLARE_C)) ||
+                        (((p.Interaction == INTERACTION.TIMETRAVEL_REW) || (p.Interaction == INTERACTION.TIMETRAVEL_FF)) && (interaction == INTERACTION.GLOW))) {
+                        p.SetTimmedInteraction(interaction, isGestureDetected);
+                    }
+
+                    if ((p.Detected) && (!isGestureDetected)) { // De hacer un gesto a dejar de hacerlo
+                        if (interaction == p.Interaction) {
+                            p.Detected = false;
+                            if (OnGestureTrigger != null)
+                                OnGestureTrigger(p.UiId, p.TrackingId, p.Interaction, false);
+                            p.Interaction = INTERACTION.NONE;
+                        }
+                    }
+                }
+
             }
         }
 
@@ -152,7 +238,8 @@ namespace KinectHandler {
         /// <param name="sender">object sending the event</param>
         /// <param name="e">event arguments</param>
         private void Sensor_IsAvailableChanged(object sender, IsAvailableChangedEventArgs e) {
-            // TODO: Usar para dar estabilidad!
+            if (OnKinectAviableChange != null)
+                OnKinectAviableChange(sender, e);
         }
 
         /// <summary>
@@ -189,13 +276,11 @@ namespace KinectHandler {
                             // if the current body is tracked, unpause its detector to get VisualGestureBuilderFrameArrived events
                             // if the current body is not tracked, pause its detector so we don't waste resources trying to get invalid gesture results
                             this.gestureDetectorList[i].IsPaused = trackingId == 0;
+
+                            // TODO: Necesario hacer esto????  =>> Siiiiiii
+                            if (_players != null)
+                                _players[i].TrackingId = bodies[i].TrackingId;
                         }
-
-
-
-                        // TODO: Necesario hacer esto????
-                        if (_players != null)
-                            _players[i].TrackingId = bodies[i].TrackingId;
                     }
                 }
             }

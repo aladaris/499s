@@ -71,8 +71,8 @@ namespace _499.InteractionHandlers {
                 if (_midiOut.IsOpen) {
                     _midiOut.Close();
                 }
+                _midiOut.Open();
             }
-            _midiOut.Open();
             OnMidiNote(GLOW_AND_SPECT_COLUMN_NOTE);
             _flares.Reset();
             _glow.Reset();

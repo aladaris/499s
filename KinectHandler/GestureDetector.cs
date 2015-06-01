@@ -11,10 +11,10 @@ namespace KinectHandler {
     using Microsoft.Kinect.VisualGestureBuilder;
 
     public delegate void DiscreteGestureDetected(string gestureName, ulong bodyTrackingId, bool isGestureDetected, float detectionConfidence);
-
+    /*
     public class Gesto {
         private bool _detected;
-        public string Name { get; private set; }
+        public Gesture gesture { get; set; }
         public string DataBase { get; private set; }
         public bool Detected {
             get { return _detected; }
@@ -28,21 +28,22 @@ namespace KinectHandler {
         public Gesto(string name, string database) {
             Name = name;
             DataBase = database;
+            gesture = null;
             _detected = false;
             PreviousDetected = false;
         }
     }
-
+    */
     /// <summary>
     /// Gesture Detector class which listens for VisualGestureBuilderFrame events from the service
     /// and updates the associated GestureResultView object with the latest results for the 'Seated' gesture
     /// </summary>
     public class GestureDetector : IDisposable {
-        private readonly Gesto[] _gestos = {
-                                               new Gesto("Seated", @"Database\Seated.gbd"),
-                                               new Gesto("Arm_T_Right", @"Database\Arm_T_Right.gba")
-                                           };
+        private string[] _gesturesNames = { "Egiptian", "Arms_T", "Arm_T_Left", "Arm_T_Right", "Arms_Y", "Arm_Y_Left", "Arm_Y_Right" };
+        private Gesture[] _gestos = new Gesture[7];
+        private bool[] _gestosDetected = new bool[7];
 
+        private string _dataBasePath = @"Database\499_Gestos.gbd";
         /// <summary> Gesture frame source which should be tied to a body tracking ID </summary>
         private VisualGestureBuilderFrameSource vgbFrameSource = null;
         /// <summary> Gesture frame reader which will handle gesture events coming from the sensor </summary>
@@ -73,18 +74,25 @@ namespace KinectHandler {
                 this.vgbFrameReader.FrameArrived += this.Reader_GestureFrameArrived;
             }
 
-            // load the gestures from the gesture databases
-            for (int i = 0; i < _gestos.Length; i++) {
-                using (VisualGestureBuilderDatabase database = new VisualGestureBuilderDatabase(_gestos[i].DataBase)) {
-                    // we could load all available gestures in the database with a call to vgbFrameSource.AddGestures(database.AvailableGestures), 
-                    // but for this program, we only want to track one discrete gesture from the database, so we'll load it by name
-                    foreach (Gesture gesture in database.AvailableGestures) {
-                        if (gesture.Name.Equals(_gestos[i].Name)) {
-                            this.vgbFrameSource.AddGesture(gesture);
-                        }
+            // load the gestures from the gesture database
+            using (VisualGestureBuilderDatabase database = new VisualGestureBuilderDatabase(_dataBasePath)) {
+                for (int i = 0; i < _gesturesNames.Length; i++) {
+                    Gesture gesture = GetGesture(_gesturesNames[i], database);
+                    if (gesture != null) {
+                        _gestos[i] = gesture;
+                        _gestosDetected[i] = false;
+                        this.vgbFrameSource.AddGesture(gesture);
                     }
                 }
             }
+        }
+
+        private Gesture GetGesture(string gesture_name, VisualGestureBuilderDatabase database) {
+            foreach (Gesture gesture in database.AvailableGestures){
+                if (gesture_name.Equals(gesture.Name))
+                    return gesture;
+            }
+            return null;
         }
 
         /// <summary>
@@ -160,20 +168,19 @@ namespace KinectHandler {
                     IReadOnlyDictionary<Gesture, DiscreteGestureResult> discreteResults = frame.DiscreteGestureResults;
 
                     if (discreteResults != null) {
-                        foreach (Gesture gesture in this.vgbFrameSource.Gestures) {
-                            for (int i = 0; i < _gestos.Length; i++) {
-                                if (gesture.Name.Equals(_gestos[i].Name) && gesture.GestureType == GestureType.Discrete) {
-                                    DiscreteGestureResult result = null;
-                                    discreteResults.TryGetValue(gesture, out result);
-                                    if (result != null) {
-                                        // AQUÍ VA EL CÓDIGO LANZADO POR EL GESTO 'gesture' con resultado 'result'
-                                        _gestos[i].Detected = result.Detected;
-                                        if (_gestos[i].Detected != _gestos[i].PreviousDetected) {
-                                            GestureDetectedChanged(_gestos[i].Name, TrackingId, result.Detected, result.Confidence);
-                                        }
-                                        //System.Windows.Forms.MessageBox.Show(result.Detected.ToString() + " gesture: " + gesture.Name + " q: " + result.Confidence.ToString());  // DEBUG
+
+                        // Recorremos todos los gestos para ver si se ha producido alún cambio.
+                        for (int i = 0; i < _gestos.Length; i++) {
+                            DiscreteGestureResult result = null;
+                            discreteResults.TryGetValue(_gestos[i], out result);
+                            if (result != null) {
+                                // TODO: Mirar si Kinect manda el Detected False, cuando se deja de trackear a alguien. O si por el contrario hay que hacer algo si _gestosDetected[i] estaba true y result es null.
+                                if (result.Detected != _gestosDetected[i]) {
+                                    if (GestureDetectedChanged != null) {
+                                        _gestosDetected[i] = result.Detected;
+                                        GestureDetectedChanged(_gestos[i].Name, TrackingId, result.Detected, result.Confidence);
+                                        break; // TODO: Mirar bien si poner esto aquí. Y en tal caso; ordenar _gestos por preferencia
                                     }
-                                    break;
                                 }
                             }
                         }
