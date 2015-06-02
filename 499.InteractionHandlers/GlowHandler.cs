@@ -206,6 +206,10 @@ namespace _499.InteractionHandlers {
             _knobTransparency.KnobEndRunning -= OnInitialTransparencyKnobEnd;
             if (Status == GLOW_HANDLER_STATUS.BLOCKED) {
                 _currentTransparencyValue = _knobTransparency.FinalValue;
+                Status = GLOW_HANDLER_STATUS.SHOWING;
+                // TODO: Este if ?????
+                if (UserNum <= 0)
+                    UpdateGlowLoop();
             }
 
         }

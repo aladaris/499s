@@ -374,9 +374,9 @@ namespace _499.InteractionHandlers {
                     return;
                 }
             }
-            traveller.StartRemoval();
             traveller.OnTimeOut -= TimeTravellerTimedOut;
             traveller.OnTimeOut += TimeTravellerRetryRemoval;
+            traveller.StartRemoval();
         }
 
         /// <summary>
@@ -508,16 +508,11 @@ namespace _499.InteractionHandlers {
         /// </summary>
         /// <returns>Speed, midi value [0-127]</returns>
         private byte GetCorrespondingSpeed() {
-            int newSpeed = 0;
-            if (_status == TT_STATUS.SPEEDING_UP) {
-                newSpeed = _currentSpeed + _speedDelta;
-                if (newSpeed > _maxSpeed)
-                    newSpeed = _maxSpeed;
-            } else if (_status == TT_STATUS.SPEEDING_DOWN) {
-                newSpeed = _currentSpeed - _speedDelta;
-                if (newSpeed < _minSpeed)
-                    newSpeed = _minSpeed;
-            }
+            int newSpeed = Math.Abs(TotalCount * _speedDelta);
+            if (newSpeed < _idleSpeed)
+                newSpeed = _idleSpeed;
+            if (newSpeed > _maxSpeed)
+                newSpeed = _maxSpeed;
             return (byte)newSpeed;
         }
 
