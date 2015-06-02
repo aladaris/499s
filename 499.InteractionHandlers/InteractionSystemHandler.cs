@@ -10,7 +10,7 @@ namespace _499.InteractionHandlers {
     public class InteractionSystemHandler {
         private OutputDevice _midiOut;
         private Channel _channel;
-        private const Pitch GLOW_AND_SPECT_COLUMN_NOTE = Pitch.C9;
+        private const Pitch RESET_NOTE = Pitch.C9;
         // Hadlers
         private FlaresHandler _flares;
         private SpectrumHandler _spectrums;
@@ -26,12 +26,12 @@ namespace _499.InteractionHandlers {
             _channel = channel;
             // FLARES
             _flares = new FlaresHandler(3, 3, 2, 2);
-            _flares.LeftVideoClips[0] = new VideoClip(0, "Flare_L_0", 5, 6, Pitch.A1);
-            _flares.LeftVideoClips[1] = new VideoClip(1, "Flare_L_1", 1, 6, Pitch.A2);
-            _flares.LeftVideoClips[2] = new VideoClip(2, "Flare_L_2", 1, 6, Pitch.A3);
-            _flares.RightVideoClips[0] = new VideoClip(0, "Flare_R_0", 2, 5, Pitch.B1);
-            _flares.RightVideoClips[1] = new VideoClip(1, "Flare_R_1", 6, 5, Pitch.B2);
-            //_flares.RightVideoClips[2] = new VideoClip(2, "Flare_R_2", 1, 0, Pitch.B3);
+            _flares.LeftVideoClips[0] = new VideoClip(0, "Flare_01", 20000, 6, Pitch.A1);
+            _flares.LeftVideoClips[1] = new VideoClip(1, "Flare_04", 42000, 6, Pitch.A2);
+            _flares.LeftVideoClips[2] = new VideoClip(2, "Flare_12", 12574, 7, Pitch.A3);
+            _flares.RightVideoClips[0] = new VideoClip(0, "Flare_01", 20000, 8, Pitch.B1);
+            _flares.RightVideoClips[1] = new VideoClip(1, "Flare_04", 42000, 8, Pitch.B2);
+            _flares.RightVideoClips[2] = new VideoClip(2, "Flare_12", 12574, 7, Pitch.B3);
             _flares.OnVideoClipPlay += OnMidiNote;
             // SPECTRUMS
             _spectrums = new SpectrumHandler(3, 2000, 500, 800, 1000);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
@@ -73,7 +73,7 @@ namespace _499.InteractionHandlers {
                 }
                 _midiOut.Open();
             }
-            OnMidiNote(GLOW_AND_SPECT_COLUMN_NOTE);
+            OnMidiNote(RESET_NOTE);
             _flares.Reset();
             _glow.Reset();
             _spectrums.Reset();
