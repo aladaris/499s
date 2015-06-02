@@ -25,13 +25,20 @@ namespace _499.InteractionHandlers {
                 throw new IndexOutOfRangeException("Index must be grater than zero and less than " + OutputDevice.InstalledDevices.Count.ToString());
             _channel = channel;
             // FLARES
-            _flares = new FlaresHandler(3, 3, 2, 2);
-            _flares.LeftVideoClips[0] = new VideoClip(0, "Flare_01", 20000, 6, Pitch.A1);
-            _flares.LeftVideoClips[1] = new VideoClip(1, "Flare_04", 42000, 6, Pitch.A2);
-            _flares.LeftVideoClips[2] = new VideoClip(2, "Flare_12", 12574, 7, Pitch.A3);
-            _flares.RightVideoClips[0] = new VideoClip(0, "Flare_01", 20000, 8, Pitch.B1);
-            _flares.RightVideoClips[1] = new VideoClip(1, "Flare_04", 42000, 8, Pitch.B2);
-            _flares.RightVideoClips[2] = new VideoClip(2, "Flare_12", 12574, 7, Pitch.B3);
+            _flares = new FlaresHandler(6, 6, 2, 2);
+            _flares.LeftVideoClips[0] = new VideoClip(0, "Flare_01", 20000, 7, Pitch.A1);
+            _flares.LeftVideoClips[1] = new VideoClip(1, "Flare_02", 19500, 8, Pitch.A2);
+            _flares.LeftVideoClips[2] = new VideoClip(2, "Flare_03", 24000, 8, Pitch.A3);
+            _flares.LeftVideoClips[3] = new VideoClip(3, "Flare_04", 42000, 7, Pitch.A4);
+            _flares.LeftVideoClips[4] = new VideoClip(4, "Flare_05", 14057, 7, Pitch.A5);
+            _flares.LeftVideoClips[5] = new VideoClip(5, "Flare_06", 11987, 8, Pitch.A6);
+            _flares.RightVideoClips[0] = new VideoClip(6, "Flare_07", 10000, 6, Pitch.B1);
+            _flares.RightVideoClips[1] = new VideoClip(7, "Flare_08",  8719, 6, Pitch.B2);
+            _flares.RightVideoClips[2] = new VideoClip(8, "Flare_10", 13250, 6, Pitch.B3);
+            _flares.RightVideoClips[3] = new VideoClip(9, "Flare_11",  9250, 5, Pitch.B4);
+            _flares.RightVideoClips[4] = new VideoClip(10, "Flare_12", 11500, 5, Pitch.B5);
+            _flares.RightVideoClips[5] = new VideoClip(11, "Flare_13", 12365, 5, Pitch.B6);
+
             _flares.OnVideoClipPlay += OnMidiNote;
             // SPECTRUMS
             _spectrums = new SpectrumHandler(3, 2000, 500, 800, 1000);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
@@ -40,7 +47,7 @@ namespace _499.InteractionHandlers {
             _spectrums.Spectrums[2] = new Spectrum(2, 4, Control.SustainPedal, CalculateHueMidiValue(0f));
             _spectrums.SendControlChange += OnControlChange;
             // TIME TRAVEL
-            _timeTravel = new TimeTravelHandler(Control.ModulationWheel, 6, 25, 150, 75);  // Valores dependientes de la configuracion de Resolume (Velocidad entre [0.5, 3]
+            _timeTravel = new TimeTravelHandler(Control.ModulationWheel, 6, 25, 150, 75);  // Valores dependientes de la configuracion de Resolume (Velocidad entre [0.5, 3])
             _timeTravel.SendControlChange += OnControlChange;
             _timeTravel.SendMidiOn += OnMidiNote;
             // GLOW
