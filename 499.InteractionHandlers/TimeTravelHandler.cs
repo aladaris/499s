@@ -92,7 +92,7 @@ namespace _499.InteractionHandlers {
         }
         // events
         public event SendMidiControlChangeHandler SendControlChange;
-        public event PlayVideoClipHandler SendMidiOn;
+        public event SendMidiNoteHandler SendMidiOn;
         public TimeTravelHandler(Midi.Control cc_value, int max_users, byte idle_speed_value = 25, int speed_change_duration = 500, int direction_change_duration = 300, Midi.Pitch rewind = Midi.Pitch.D0, Midi.Pitch fforward = Midi.Pitch.D1) {
             _maxUsers = max_users;
             _speedDelta = (byte)(_maxSpeed / (byte)_maxUsers);

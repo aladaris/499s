@@ -51,7 +51,7 @@ namespace _499.InteractionHandlers {
         }
         // events
         public event SendMidiControlChangeHandler SendControlChange;
-        public event PlayVideoClipHandler SendMidiOn;
+        public event SendMidiNoteHandler SendMidiOn;
 
         public GlowHandler(Midi.Control transparency_cc = Midi.Control.CelesteLevel, double transparency_duration = 300, Midi.Control parameters1_cc = Midi.Control.ChorusLevel, double parameters1_duration = 200,Midi.Pitch glow_trigger_note = Midi.Pitch.G1) {
             _knobTransparency = new MidiKnob(0, transparency_cc, 0, 127, transparency_duration);

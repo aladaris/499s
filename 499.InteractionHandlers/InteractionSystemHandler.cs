@@ -42,10 +42,11 @@ namespace _499.InteractionHandlers {
             _flares.OnVideoClipPlay += OnMidiNote;
             // SPECTRUMS
             _spectrums = new SpectrumHandler(3, 2000, 500, 800, 1000);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
-            _spectrums.Spectrums[0] = new Spectrum(0, 2, Control.Volume, CalculateHueMidiValue(0.36f));
-            _spectrums.Spectrums[1] = new Spectrum(1, 3, Control.TremoloLevel, CalculateHueMidiValue(0.16f));
-            _spectrums.Spectrums[2] = new Spectrum(2, 4, Control.SustainPedal, CalculateHueMidiValue(0f));
+            _spectrums.Spectrums[0] = new Spectrum(0, 2, Control.Volume, Pitch.CSharp1, Pitch.DSharp1, CalculateHueMidiValue(0.36f));
+            _spectrums.Spectrums[1] = new Spectrum(1, 3, Control.TremoloLevel, Pitch.CSharp2, Pitch.DSharp2, CalculateHueMidiValue(0.16f));
+            _spectrums.Spectrums[2] = new Spectrum(2, 4, Control.SustainPedal, Pitch.CSharp3, Pitch.DSharp3, CalculateHueMidiValue(0f));
             _spectrums.SendControlChange += OnControlChange;
+            _spectrums.SendMidiNote += OnMidiNote;
             // TIME TRAVEL
             _timeTravel = new TimeTravelHandler(Control.ModulationWheel, 6, 25, 150, 75);  // Valores dependientes de la configuracion de Resolume (Velocidad entre [0.5, 3])
             _timeTravel.SendControlChange += OnControlChange;
