@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 using Midi;
 
@@ -11,6 +12,8 @@ namespace _499.InteractionHandlers {
         private OutputDevice _midiOut;
         private Channel _channel;
         private const Pitch RESET_NOTE = Pitch.C9;
+        private Timer _timeOutTimer;
+        private const float TIMEOUT_VALUE = 600000; // 10 minutos = 600000
         // Hadlers
         private FlaresHandler _flares;
         private SpectrumHandler _spectrums;
@@ -24,6 +27,9 @@ namespace _499.InteractionHandlers {
             } else
                 throw new IndexOutOfRangeException("Index must be grater than zero and less than " + OutputDevice.InstalledDevices.Count.ToString());
             _channel = channel;
+            _timeOutTimer = new Timer(TIMEOUT_VALUE);
+            _timeOutTimer.AutoReset = false;
+            _timeOutTimer.Elapsed += OnTimeOut;
             // FLARES
             int trim = 200;  // Make the flares a bit shorter, because at the end of the video there is almost nothing
             _flares = new FlaresHandler(6, 6, 1, 1, 6, false);
@@ -39,10 +45,9 @@ namespace _499.InteractionHandlers {
             _flares.RightVideoClips[3] = new VideoClip(9, "Flare_11",  9250 - trim, 5, Pitch.B4);
             _flares.RightVideoClips[4] = new VideoClip(10, "Flare_12",11500 - trim, 5, Pitch.B5);
             _flares.RightVideoClips[5] = new VideoClip(11, "Flare_13",12365 - trim, 5, Pitch.B6);
-
             _flares.OnMidiNote += OnMidiNote;
             // SPECTRUMS
-            _spectrums = new SpectrumHandler(10, 2000, 500, 800, 1000, true);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
+            _spectrums = new SpectrumHandler(10, 7500, 500, 800, 500, true);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
             _spectrums.Spectrums[0] = new Spectrum(0, 2, Control.Volume, Pitch.CSharp1, Pitch.DSharp1, CalculateHueMidiValue(0.36f));
             _spectrums.Spectrums[1] = new Spectrum(1, 3, Control.TremoloLevel, Pitch.CSharp2, Pitch.DSharp2, CalculateHueMidiValue(0.16f));
             _spectrums.Spectrums[2] = new Spectrum(2, 4, Control.SustainPedal, Pitch.CSharp3, Pitch.DSharp3, CalculateHueMidiValue(0f));
@@ -53,11 +58,10 @@ namespace _499.InteractionHandlers {
             _spectrums.Spectrums[7] = new Spectrum(7, 9, Control.RegisteredParameterNumberLSB, Pitch.CSharp8, Pitch.DSharp8, CalculateHueMidiValue(0f));
             _spectrums.Spectrums[8] = new Spectrum(8, 10, Control.RegisteredParameterNumberMSB, Pitch.CSharp9, Pitch.DSharp9, CalculateHueMidiValue(0f));
             _spectrums.Spectrums[9] = new Spectrum(9, 11, Control.ChorusLevel, Pitch.CSharp0, Pitch.DSharp0, CalculateHueMidiValue(0f));
-
             _spectrums.SendControlChange += OnControlChange;
             _spectrums.SendMidiNote += OnMidiNote;
             // TIME TRAVEL
-            _timeTravel = new TimeTravelHandler(Control.ModulationWheel, 6, 13, 150, 75);  // Valores dependientes de la configuracion de Resolume (Velocidad entre [0.5, 3])
+            _timeTravel = new TimeTravelHandler(Control.ModulationWheel, 6, 13, 150, 75, Pitch.D0, Pitch.D1);  // Valores dependientes de la configuracion de Resolume (Velocidad entre [0.5, 3])
             _timeTravel.SendControlChange += OnControlChange;
             _timeTravel.SendMidiOn += OnMidiNote;
             // GLOW
@@ -90,11 +94,21 @@ namespace _499.InteractionHandlers {
                 }
                 _midiOut.Open();
             }
+            ResetTimeOutTimer();
+
             OnMidiNote(RESET_NOTE);
             _flares.Reset();
             _glow.Reset();
             _spectrums.Reset();
             _timeTravel.Reset();
+        }
+
+        private void ResetTimeOutTimer() {
+            if (_timeOutTimer != null) {
+                _timeOutTimer.Stop();
+                _timeOutTimer.AutoReset = false;
+                _timeOutTimer.Start();
+            }
         }
 
         private byte CalculateHueMidiValue(float hue) {
@@ -136,34 +150,40 @@ namespace _499.InteractionHandlers {
 
         #region Flares
         public bool NewUserFlares(FLARE_SIDE side) {
+            ResetTimeOutTimer();
             //if ((_spectrums.Status == SPECTRUM_HANDLER_STATUS.IDLE)||(_spectrums.Status == SPECTRUM_HANDLER_STATUS.RESTING))
                 //if ((_timeTravel.Status == TT_STATUS.IDLE)&&(_timeTravel.TotalCount == 0))
             return _flares.NewUser(side);
             //return false;
         }
         public bool RemoveUserFlares() {
+            ResetTimeOutTimer();
             return _flares.RemoveUser();
         }
         #endregion
 
         #region Spectrums
         public bool NewUserSpectrums() {
+            ResetTimeOutTimer();
             //if ((_flares.PlayingLeft == 0)&&(_flares.PlayingRight == 0))
                 return _spectrums.NewUser();
             //return false;
         }
         public bool RemoveUserSpectrums() {
+            ResetTimeOutTimer();
             return _spectrums.RemoveUser();
         }
         #endregion
 
         #region Time Travel
         public bool NewUserTimeTravel(TT_SIDE side) {
+            ResetTimeOutTimer();
             //if ((_flares.PlayingLeft == 0) && (_flares.PlayingRight == 0))
                 return _timeTravel.NewUser(side);
             //return false;
         }
         public bool RemoveUserTimeTravel(TT_SIDE side) {
+            ResetTimeOutTimer();
             if (_timeTravel.UserNum > 0)
                 return _timeTravel.RemoveUser(side);
             return false;
@@ -172,9 +192,11 @@ namespace _499.InteractionHandlers {
 
         #region Glow
         public bool NewUserGlow() {
+            ResetTimeOutTimer();
             return _glow.NewUser();
         }
         public bool RemoveUserGlow() {
+            ResetTimeOutTimer();
             return _glow.RemoveUser();
         }
         #endregion
@@ -192,6 +214,11 @@ namespace _499.InteractionHandlers {
             if (_midiOut != null)
                 if (_midiOut.IsOpen)
                     _midiOut.SendControlChange(_channel, control, value);
+        }
+
+        private void OnTimeOut(object sender, ElapsedEventArgs e){
+            _timeOutTimer.Stop();
+            Reset();
         }
         #endregion
 
