@@ -26,7 +26,7 @@ namespace _499.InteractionHandlers {
             _channel = channel;
             // FLARES
             int trim = 200;  // Make the flares a bit shorter, because at the end of the video there is almost nothing
-            _flares = new FlaresHandler(6, 6, 2, 2, 6, true);
+            _flares = new FlaresHandler(6, 6, 1, 1, 6, false);
             _flares.LeftVideoClips[0] = new VideoClip(0, "Flare_01",  20000 - trim, 7, Pitch.A1);
             _flares.LeftVideoClips[1] = new VideoClip(1, "Flare_02",  19500 - trim, 8, Pitch.A2);
             _flares.LeftVideoClips[2] = new VideoClip(2, "Flare_03",  24000 - trim, 8, Pitch.A3);
@@ -42,7 +42,7 @@ namespace _499.InteractionHandlers {
 
             _flares.OnMidiNote += OnMidiNote;
             // SPECTRUMS
-            _spectrums = new SpectrumHandler(10, 2000, 500, 800, 1000);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
+            _spectrums = new SpectrumHandler(10, 2000, 500, 800, 1000, true);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
             _spectrums.Spectrums[0] = new Spectrum(0, 2, Control.Volume, Pitch.CSharp1, Pitch.DSharp1, CalculateHueMidiValue(0.36f));
             _spectrums.Spectrums[1] = new Spectrum(1, 3, Control.TremoloLevel, Pitch.CSharp2, Pitch.DSharp2, CalculateHueMidiValue(0.16f));
             _spectrums.Spectrums[2] = new Spectrum(2, 4, Control.SustainPedal, Pitch.CSharp3, Pitch.DSharp3, CalculateHueMidiValue(0f));
@@ -57,11 +57,11 @@ namespace _499.InteractionHandlers {
             _spectrums.SendControlChange += OnControlChange;
             _spectrums.SendMidiNote += OnMidiNote;
             // TIME TRAVEL
-            _timeTravel = new TimeTravelHandler(Control.ModulationWheel, 6, 25, 150, 75);  // Valores dependientes de la configuracion de Resolume (Velocidad entre [0.5, 3])
+            _timeTravel = new TimeTravelHandler(Control.ModulationWheel, 6, 13, 150, 75);  // Valores dependientes de la configuracion de Resolume (Velocidad entre [0.5, 3])
             _timeTravel.SendControlChange += OnControlChange;
             _timeTravel.SendMidiOn += OnMidiNote;
             // GLOW
-            _glow = new GlowHandler(Control.CelesteLevel, 300, 200);
+            _glow = new GlowHandler(Control.CelesteLevel, 300, 200, Pitch.G1, Pitch.G0, false);
             _glow.SendControlChange += OnControlChange;
             _glow.SendMidiOn += OnMidiNote;
 
@@ -136,10 +136,10 @@ namespace _499.InteractionHandlers {
 
         #region Flares
         public bool NewUserFlares(FLARE_SIDE side) {
-            if ((_spectrums.Status == SPECTRUM_HANDLER_STATUS.IDLE)||(_spectrums.Status == SPECTRUM_HANDLER_STATUS.RESTING))
-                if ((_timeTravel.Status == TT_STATUS.IDLE)&&(_timeTravel.TotalCount == 0))
-                    return _flares.NewUser(side);
-            return false;
+            //if ((_spectrums.Status == SPECTRUM_HANDLER_STATUS.IDLE)||(_spectrums.Status == SPECTRUM_HANDLER_STATUS.RESTING))
+                //if ((_timeTravel.Status == TT_STATUS.IDLE)&&(_timeTravel.TotalCount == 0))
+            return _flares.NewUser(side);
+            //return false;
         }
         public bool RemoveUserFlares() {
             return _flares.RemoveUser();
@@ -148,9 +148,9 @@ namespace _499.InteractionHandlers {
 
         #region Spectrums
         public bool NewUserSpectrums() {
-            if ((_flares.PlayingLeft == 0)&&(_flares.PlayingRight == 0))
+            //if ((_flares.PlayingLeft == 0)&&(_flares.PlayingRight == 0))
                 return _spectrums.NewUser();
-            return false;
+            //return false;
         }
         public bool RemoveUserSpectrums() {
             return _spectrums.RemoveUser();
@@ -159,9 +159,9 @@ namespace _499.InteractionHandlers {
 
         #region Time Travel
         public bool NewUserTimeTravel(TT_SIDE side) {
-            if ((_flares.PlayingLeft == 0) && (_flares.PlayingRight == 0))
+            //if ((_flares.PlayingLeft == 0) && (_flares.PlayingRight == 0))
                 return _timeTravel.NewUser(side);
-            return false;
+            //return false;
         }
         public bool RemoveUserTimeTravel(TT_SIDE side) {
             if (_timeTravel.UserNum > 0)

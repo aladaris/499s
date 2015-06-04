@@ -56,8 +56,9 @@ namespace _499.InteractionHandlers {
 
         public Spectrum[] Spectrums { get { return _spectrums; } }
         public SPECTRUM_HANDLER_STATUS Status { get { return _status; } }
+        public bool AllPlayingMode { get; set; }
 
-        public SpectrumHandler(int spectrum_count, int duration = 5000, int fadeIn = 1000, int fadeOut = 1000, int rest = 7500) {
+        public SpectrumHandler(int spectrum_count, int duration = 5000, int fadeIn = 1000, int fadeOut = 1000, int rest = 7500, bool all_playing = false) {
             if (spectrum_count > 0)
                 _spectrums = new Spectrum[spectrum_count];
             else
@@ -75,6 +76,7 @@ namespace _499.InteractionHandlers {
             _rester = new Timer(rest);
             _rester.AutoReset = false;
             _rester.Elapsed += RestingEnded;
+            AllPlayingMode = all_playing;
             Reset();
         }
 
@@ -88,8 +90,10 @@ namespace _499.InteractionHandlers {
                 SendControlChange(_knobGlowHue.CCValue, BASE_HUE_VALUE);
                 for (int i = 0; i < _spectrums.Length; i++) {
                     SendControlChange(_spectrums[i].CCValue, 0);
-                    if (SendMidiNote != null)
-                        SendMidiNote(_spectrums[i].NoteStop);
+                    if (!AllPlayingMode) {
+                        if (SendMidiNote != null)
+                            SendMidiNote(_spectrums[i].NoteStop);
+                    }
                 }
             }
             if (SendMidiNote != null) {
@@ -106,12 +110,14 @@ namespace _499.InteractionHandlers {
                 _currentSpectrum = GetCorrespondingSpectrum();
 
 
-                ////////////////////////////////////////////////////////
-                // Start the selected spectrum at a random position
-                if (SendMidiNote != null)
-                    SendMidiNote(_currentSpectrum.NotePlay);
-                if (SendControlChange != null)
-                    SendControlChange(SPECTRUMS_PLAYING_POS, rand.Next(128));
+                if (!AllPlayingMode) {
+                    ////////////////////////////////////////////////////////
+                    // Start the selected spectrum at a random position
+                    if (SendMidiNote != null)
+                        SendMidiNote(_currentSpectrum.NotePlay);
+                    if (SendControlChange != null)
+                        SendControlChange(SPECTRUMS_PLAYING_POS, rand.Next(128));
+                }
 
                 // Setting the fade in properties
                 _knobFade.CCValue = _currentSpectrum.CCValue;
@@ -132,12 +138,14 @@ namespace _499.InteractionHandlers {
                 _currentSpectrum = GetCorrespondingSpectrum();
 
 
-                ////////////////////////////////////////////////////////
-                // Start the selected spectrum at a random position
-                if (SendMidiNote != null)
-                    SendMidiNote(_currentSpectrum.NotePlay);
-                if (SendControlChange != null)
-                    SendControlChange(SPECTRUMS_PLAYING_POS, rand.Next(128));
+                if (!AllPlayingMode) {
+                    ////////////////////////////////////////////////////////
+                    // Start the selected spectrum at a random position
+                    if (SendMidiNote != null)
+                        SendMidiNote(_currentSpectrum.NotePlay);
+                    if (SendControlChange != null)
+                        SendControlChange(SPECTRUMS_PLAYING_POS, rand.Next(128));
+                }
 
 
                 if (_currentSpectrum.Layer > _oldSpect.Layer) {
@@ -212,9 +220,12 @@ namespace _499.InteractionHandlers {
                         _status = SPECTRUM_HANDLER_STATUS.SHOWING;
                         _knobFade.KnobEndRunning -= FadeInEnded;
                         _duration.Start();
-                        // We stop the base loop, since we are already showing a spectrum.
-                        if (SendMidiNote != null){
+                        if (!AllPlayingMode) {
+                            // We stop the base loop, since we are already showing a spectrum.
+                            if (SendMidiNote != null) {
                                 SendMidiNote(BASE_SUN_LOOP_NOTE_STOP);
+
+                            }
                         }
                     }
                 }
@@ -239,14 +250,15 @@ namespace _499.InteractionHandlers {
                 if (_status == SPECTRUM_HANDLER_STATUS.SHOWING) {
                     _status = SPECTRUM_HANDLER_STATUS.BLOCKED;
 
-                    // We turn on the main loop at a random point
-                    System.Random rand = new Random();
-                    if (SendMidiNote != null)
-                        SendMidiNote(BASE_SUN_LOOP_NOTE_PLAY);
-                    if (SendControlChange != null)
-                        SendControlChange(BASE_SUN_PLAYING_POS, rand.Next(128));
-                    _oldSpect = _currentSpectrum;
-
+                    if (!AllPlayingMode) {
+                        // We turn on the main loop at a random point
+                        System.Random rand = new Random();
+                        if (SendMidiNote != null)
+                            SendMidiNote(BASE_SUN_LOOP_NOTE_PLAY);
+                        if (SendControlChange != null)
+                            SendControlChange(BASE_SUN_PLAYING_POS, rand.Next(128));
+                        _oldSpect = _currentSpectrum;
+                    }
                     // Setting the fade out properties
                     _knobFade.CCValue = _currentSpectrum.CCValue;
                     _knobFade.SetRange(127, 0);
@@ -267,10 +279,12 @@ namespace _499.InteractionHandlers {
             if (!_knobFade.IsRunning) {
                 if (!_rester.Enabled) {
                     if (_status == SPECTRUM_HANDLER_STATUS.BLOCKED) {
-                        // We turn off the previous spectrum
-                        if (SendMidiNote != null) {
-                            if (_oldSpect != null)
-                                SendMidiNote(_oldSpect.NoteStop);
+                        if (!AllPlayingMode) {
+                            // We turn off the previous spectrum
+                            if (SendMidiNote != null) {
+                                if (_oldSpect != null)
+                                    SendMidiNote(_oldSpect.NoteStop);
+                            }
                         }
 
                         _status = SPECTRUM_HANDLER_STATUS.RESTING;

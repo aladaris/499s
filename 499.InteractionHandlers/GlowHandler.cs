@@ -50,11 +50,12 @@ namespace _499.InteractionHandlers {
                 _status = value;
             }
         }
+        public bool StopGlow { get; set; }
         // events
         public event SendMidiControlChangeHandler SendControlChange;
         public event SendMidiNoteHandler SendMidiOn;
 
-        public GlowHandler(Midi.Control transparency_cc = Midi.Control.CelesteLevel, double transparency_duration = 300, double parameters1_duration = 200,Midi.Pitch glow_play_note = Midi.Pitch.G1, Midi.Pitch glow_stop_note = Midi.Pitch.G0) {
+        public GlowHandler(Midi.Control transparency_cc = Midi.Control.CelesteLevel, double transparency_duration = 300, double parameters1_duration = 200,Midi.Pitch glow_play_note = Midi.Pitch.G1, Midi.Pitch glow_stop_note = Midi.Pitch.G0, bool stop_glow = false) {
             _knobTransparency = new MidiKnob(0, transparency_cc, 0, 127, transparency_duration);
             _knobTransparency.KnobEndRunning += OnInitialTransparencyKnobEnd;
             _knobTransparency.SendMidiControlChange += SendMidiControlChange;
@@ -62,6 +63,7 @@ namespace _499.InteractionHandlers {
             _loopUpdaterTimer.Elapsed += LoopTimerTick;
             _glowClipPlay = glow_play_note;
             _glowClipStop = glow_stop_note;
+            StopGlow = stop_glow;
             Status = GLOW_HANDLER_STATUS.IDLE;
         }
 
@@ -106,8 +108,9 @@ namespace _499.InteractionHandlers {
             _knobTransparency.Stop();
             if (SendControlChange != null)
                 SendControlChange(_knobTransparency.CCValue, 0);
-            if (SendMidiOn != null)
-                SendMidiOn(_glowClipStop);
+            if (StopGlow)
+                if (SendMidiOn != null)
+                    SendMidiOn(_glowClipStop);
             _status = GLOW_HANDLER_STATUS.IDLE;
         }
 
@@ -168,8 +171,9 @@ namespace _499.InteractionHandlers {
             if (!_knobTransparency.IsRunning) {
                 Status = GLOW_HANDLER_STATUS.BLOCKED;
                 _pendingUsers--;
-                if (SendMidiOn != null)
-                    SendMidiOn(_glowClipPlay);
+                if (StopGlow)
+                    if (SendMidiOn != null)
+                        SendMidiOn(_glowClipPlay);
                 _knobTransparency.KnobEndRunning += OnInitialTransparencyKnobEnd;
                 _knobTransparency.SetRange(_currentTransparencyValue, GetCorrespondingTransparencyValue());
                 _knobTransparency.Start();
@@ -226,8 +230,9 @@ namespace _499.InteractionHandlers {
             _knobTransparency.KnobEndRunning -= OnFinalTransparencyKnobEnd;
             if (Status == GLOW_HANDLER_STATUS.BLOCKED) {
                 _currentTransparencyValue = _knobTransparency.FinalValue;
-                if (SendMidiOn != null)
-                    SendMidiOn(_glowClipStop);
+                if (StopGlow)
+                    if (SendMidiOn != null)
+                        SendMidiOn(_glowClipStop);
                 Status = GLOW_HANDLER_STATUS.IDLE;
             }
         }

@@ -22,3 +22,6 @@ D:\Dropbox\28ymedio\499s\Programa\499Interaction\ManualGestureTrigger\obj\Debug\
 D:\Dropbox\28ymedio\499s\Programa\499Interaction\ManualGestureTrigger\obj\Debug\ManualGestureTrigger.csproj.GenerateResource.Cache
 D:\Dropbox\28ymedio\499s\Programa\499Interaction\ManualGestureTrigger\obj\Debug\GestureTrigger.exe
 D:\Dropbox\28ymedio\499s\Programa\499Interaction\ManualGestureTrigger\obj\Debug\GestureTrigger.pdb
+C:\Users\28.5\Desktop\499Interaction\ManualGestureTrigger\bin\Debug\GestureTrigger.exe.config
+C:\Users\28.5\Desktop\499Interaction\ManualGestureTrigger\obj\Debug\GestureTrigger.exe
+C:\Users\28.5\Desktop\499Interaction\ManualGestureTrigger\obj\Debug\GestureTrigger.pdb
