@@ -21,25 +21,29 @@ namespace _499.InteractionHandlers {
         private int _runningVideoClipsRight = 0;  // Number of videoclips running on the right side
         private int[] _usedLayersLeft;  // Layers used by the Left Flares (-1 for none)
         private int[] _usedLayersRight; // Layers used by the Right Flares (-1 for none)
+        public const Midi.Pitch BASE_SUN_LOOP_NOTE_PAUSE = Midi.Pitch.ASharp3;
+        public const Midi.Pitch BASE_SUN_LOOP_NOTE_RESUME = Midi.Pitch.D1;
 
         public int UserNum { get { return _nUsers; } }
         public int PlayingLeft { get { return _runningVideoClipsLeft; } }
         public int PlayingRight { get { return _runningVideoClipsRight; } }
+        public bool PauseTheSun { get; set; }  ///<summary>Shall we pause the sun while palying the flares?</summary>
 
 
         // Events
-        public event SendMidiNoteHandler OnVideoClipPlay;
+        public event SendMidiNoteHandler OnMidiNote;
 
         public VideoClip[] LeftVideoClips { get { return _leftVideoClips; } }
         public VideoClip[] RightVideoClips { get { return _rightVideoClips; } }
 
-        public FlaresHandler(int nFlaresLeft, int nFlaresRight, int maxFlaresLeft, int maxFlaresRight, int maxUsers = 6) {
+        public FlaresHandler(int nFlaresLeft, int nFlaresRight, int maxFlaresLeft, int maxFlaresRight, int maxUsers = 6, bool pause_the_sun = false) {
             _maxUsers = maxUsers;
             _maxFlaresLeft = maxFlaresLeft;
             _maxFlaresRight = maxFlaresRight;
             _leftVideoClips = new VideoClip[nFlaresLeft];
             _rightVideoClips = new VideoClip[nFlaresRight];
             _usedLayersLeft = new int[_maxFlaresLeft];
+            PauseTheSun = pause_the_sun;
             for (int i = 0; i < _maxFlaresLeft; i++)
                 _usedLayersLeft[i] = -1;
             _usedLayersRight = new int[_maxFlaresRight];
@@ -56,6 +60,14 @@ namespace _499.InteractionHandlers {
         public bool NewUser(FLARE_SIDE side) {
             if (_nUsers + 1 > _maxUsers)
                 return false;
+            // If no users and PauseSun => We pause the sun
+            if ((_nUsers <= 0) && (PauseTheSun)){
+                if ((PlayingLeft <= 0) && (PlayingRight <= 0)) {
+                    if (OnMidiNote != null) {
+                        OnMidiNote(BASE_SUN_LOOP_NOTE_PAUSE);
+                    }
+                }
+            }
             _nUsers++;
             VideoClip[] clips = GetCorrespondingVideoClips(side);
             switch (clips.Length) {
@@ -105,8 +117,8 @@ namespace _499.InteractionHandlers {
 
         private bool PlayVideoClip(VideoClip clip) {
             if (clip.Play()) {
-                if (OnVideoClipPlay != null) {
-                    OnVideoClipPlay(clip.MidiNote);
+                if (OnMidiNote != null) {
+                    OnMidiNote(clip.MidiNote);
                     return true;
                 }
             }
@@ -119,6 +131,11 @@ namespace _499.InteractionHandlers {
                 video.OnVideoClipEnd -= OnLeftVideoClipStop;
                 SetLayerStop(ref _usedLayersLeft, video.Layer);
                 _runningVideoClipsLeft--;
+                // Pause the sun => Resume the sun loop if  no flares are being played
+                if ((_runningVideoClipsLeft <= 0) && (_runningVideoClipsRight <= 0)&&(PauseTheSun)) {
+                    if (OnMidiNote != null)
+                        OnMidiNote(BASE_SUN_LOOP_NOTE_RESUME);
+                }
             }
         }
 
@@ -127,6 +144,11 @@ namespace _499.InteractionHandlers {
                 video.OnVideoClipEnd -= OnRightVideoClipStop;
                 SetLayerStop(ref _usedLayersRight, video.Layer);
                 _runningVideoClipsRight--;
+                // Pause the sun => Resume the sun loop if  no flares are being played
+                if ((_runningVideoClipsLeft <= 0) && (_runningVideoClipsRight <= 0) && (PauseTheSun)) {
+                    if (OnMidiNote != null)
+                        OnMidiNote(BASE_SUN_LOOP_NOTE_RESUME);
+                }
             }
         }
 
