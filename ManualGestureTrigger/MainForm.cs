@@ -20,7 +20,7 @@ namespace ManualGestureTrigger {
         public MainForm() {
             InitializeComponent();
             LoadMidiOutDevicesComboBox();
-            _mainHandler = new InteractionSystemHandler(2, Channel.Channel1);
+            _mainHandler = new InteractionSystemHandler(0, Channel.Channel1);
         }
 
         private void LoadMidiOutDevicesComboBox() {

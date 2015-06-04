@@ -51,6 +51,7 @@ namespace KinectHandler {
 
         // events
         public event DiscreteGestureDetected GestureDetectedChanged;
+        public event EventHandler<TrackingIdLostEventArgs> TrackingIdLost;
 
 
         /// <summary>
@@ -195,7 +196,16 @@ namespace KinectHandler {
         /// <param name="sender">object sending the event</param>
         /// <param name="e">event arguments</param>
         private void Source_TrackingIdLost(object sender, TrackingIdLostEventArgs e) {
-            // TODO: Algo?
+            if ((_gestosDetected != null) &&(_gestos != null)){
+                for (int i = 0; i < _gestos.Length; i++) {
+                    if (_gestosDetected[i]) {
+                        _gestosDetected[i] = false;
+                        GestureDetectedChanged(_gestos[i].Name, TrackingId, false, 1.0f);
+                    }
+                }
+            }
+            if (TrackingIdLost != null)
+                TrackingIdLost(sender, e);
         }
     }
 }

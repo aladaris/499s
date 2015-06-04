@@ -41,10 +41,18 @@ namespace _499.InteractionHandlers {
 
             _flares.OnVideoClipPlay += OnMidiNote;
             // SPECTRUMS
-            _spectrums = new SpectrumHandler(3, 2000, 500, 800, 1000);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
+            _spectrums = new SpectrumHandler(10, 2000, 500, 800, 1000);  // NOTE: Un knob a menos de 500 ms, se vuelve loco??
             _spectrums.Spectrums[0] = new Spectrum(0, 2, Control.Volume, Pitch.CSharp1, Pitch.DSharp1, CalculateHueMidiValue(0.36f));
             _spectrums.Spectrums[1] = new Spectrum(1, 3, Control.TremoloLevel, Pitch.CSharp2, Pitch.DSharp2, CalculateHueMidiValue(0.16f));
             _spectrums.Spectrums[2] = new Spectrum(2, 4, Control.SustainPedal, Pitch.CSharp3, Pitch.DSharp3, CalculateHueMidiValue(0f));
+            _spectrums.Spectrums[3] = new Spectrum(3, 5, Control.ReverbLevel, Pitch.CSharp4, Pitch.DSharp4, CalculateHueMidiValue(0f));  // TODO: HUE VALUES
+            _spectrums.Spectrums[4] = new Spectrum(4, 6, Control.NonRegisteredParameterLSB, Pitch.CSharp5, Pitch.DSharp5, CalculateHueMidiValue(0f));
+            _spectrums.Spectrums[5] = new Spectrum(5, 7, Control.NonRegisteredParameterMSB, Pitch.CSharp6, Pitch.DSharp6, CalculateHueMidiValue(0f));
+            _spectrums.Spectrums[6] = new Spectrum(6, 8, Control.PhaserLevel, Pitch.CSharp7, Pitch.DSharp7, CalculateHueMidiValue(0f));
+            _spectrums.Spectrums[7] = new Spectrum(7, 9, Control.RegisteredParameterNumberLSB, Pitch.CSharp8, Pitch.DSharp8, CalculateHueMidiValue(0f));
+            _spectrums.Spectrums[8] = new Spectrum(8, 10, Control.RegisteredParameterNumberMSB, Pitch.CSharp9, Pitch.DSharp9, CalculateHueMidiValue(0f));
+            _spectrums.Spectrums[9] = new Spectrum(9, 11, Control.ChorusLevel, Pitch.CSharp0, Pitch.DSharp0, CalculateHueMidiValue(0f));
+
             _spectrums.SendControlChange += OnControlChange;
             _spectrums.SendMidiNote += OnMidiNote;
             // TIME TRAVEL
@@ -52,7 +60,7 @@ namespace _499.InteractionHandlers {
             _timeTravel.SendControlChange += OnControlChange;
             _timeTravel.SendMidiOn += OnMidiNote;
             // GLOW
-            _glow = new GlowHandler(Control.CelesteLevel, 300, Control.ChorusLevel, 200);
+            _glow = new GlowHandler(Control.CelesteLevel, 300, 200);
             _glow.SendControlChange += OnControlChange;
             _glow.SendMidiOn += OnMidiNote;
 

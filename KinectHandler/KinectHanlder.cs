@@ -96,6 +96,7 @@ namespace KinectHandler {
         private List<Player> _players = null;
         public event GestureTrigger OnGestureTrigger;
         public event EventHandler<IsAvailableChangedEventArgs> OnKinectAviableChange;
+        public event EventHandler<TrackingIdLostEventArgs> TrackingIdLost;
 
         public KinectHanlder() {
             // only one sensor is currently supported
@@ -118,11 +119,17 @@ namespace KinectHandler {
             for (int i = 0; i < maxBodies; ++i) {
                 GestureDetector detector = new GestureDetector(this.kinectSensor);
                 detector.GestureDetectedChanged += GestureChanged;
+                detector.TrackingIdLost += OnTrackingIdLost;
                 this.gestureDetectorList.Add(detector);
                 Player p = new Player(i, (ulong)i);
                 p.GestureTriggered += OnPlayerGestureTrigger;
                 _players.Add(p);
             }
+        }
+
+        private void OnTrackingIdLost(object sender, TrackingIdLostEventArgs e){
+            if (TrackingIdLost != null)
+                TrackingIdLost(sender, e);
         }
 
         private void OnPlayerGestureTrigger(int ui_id, ulong trackingId, INTERACTION interaction, bool detected) {

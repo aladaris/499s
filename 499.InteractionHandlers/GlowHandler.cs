@@ -17,9 +17,10 @@ namespace _499.InteractionHandlers {
         private int _nUsers = 0;
         private const int MAXUSERS = 6;
         private MidiKnob _knobTransparency;
-        private readonly Midi.Pitch _glowClipTriggerNote;  // Note to trigger the glow clip in Resolume
+        private readonly Midi.Pitch _glowClipPlay;  // Note to play the glow clip in Resolume
+        private readonly Midi.Pitch _glowClipStop;  // Note to stop the glow clip in Resolume
         private byte _currentTransparencyValue = 0;
-        private byte _transparencyDelta = (byte)(127 / MAXUSERS);
+        private byte _transparencyDelta = (byte)(128 / MAXUSERS);
         private Timer _loopUpdaterTimer;
         private GLOW_HANDLER_STATUS _status;
         private int _pendingUsers = 0;  // Usuarios añadidos/eliminados mientras se estaba en BLOCKED?
@@ -53,13 +54,14 @@ namespace _499.InteractionHandlers {
         public event SendMidiControlChangeHandler SendControlChange;
         public event SendMidiNoteHandler SendMidiOn;
 
-        public GlowHandler(Midi.Control transparency_cc = Midi.Control.CelesteLevel, double transparency_duration = 300, Midi.Control parameters1_cc = Midi.Control.ChorusLevel, double parameters1_duration = 200,Midi.Pitch glow_trigger_note = Midi.Pitch.G1) {
+        public GlowHandler(Midi.Control transparency_cc = Midi.Control.CelesteLevel, double transparency_duration = 300, double parameters1_duration = 200,Midi.Pitch glow_play_note = Midi.Pitch.G1, Midi.Pitch glow_stop_note = Midi.Pitch.G0) {
             _knobTransparency = new MidiKnob(0, transparency_cc, 0, 127, transparency_duration);
             _knobTransparency.KnobEndRunning += OnInitialTransparencyKnobEnd;
             _knobTransparency.SendMidiControlChange += SendMidiControlChange;
             _loopUpdaterTimer = new Timer(1000);
             _loopUpdaterTimer.Elapsed += LoopTimerTick;
-            _glowClipTriggerNote = glow_trigger_note;
+            _glowClipPlay = glow_play_note;
+            _glowClipStop = glow_stop_note;
             Status = GLOW_HANDLER_STATUS.IDLE;
         }
 
@@ -105,7 +107,7 @@ namespace _499.InteractionHandlers {
             if (SendControlChange != null)
                 SendControlChange(_knobTransparency.CCValue, 0);
             if (SendMidiOn != null)
-                SendMidiOn(_glowClipTriggerNote);
+                SendMidiOn(_glowClipStop);
             _status = GLOW_HANDLER_STATUS.IDLE;
         }
 
@@ -166,6 +168,8 @@ namespace _499.InteractionHandlers {
             if (!_knobTransparency.IsRunning) {
                 Status = GLOW_HANDLER_STATUS.BLOCKED;
                 _pendingUsers--;
+                if (SendMidiOn != null)
+                    SendMidiOn(_glowClipPlay);
                 _knobTransparency.KnobEndRunning += OnInitialTransparencyKnobEnd;
                 _knobTransparency.SetRange(_currentTransparencyValue, GetCorrespondingTransparencyValue());
                 _knobTransparency.Start();
@@ -222,6 +226,8 @@ namespace _499.InteractionHandlers {
             _knobTransparency.KnobEndRunning -= OnFinalTransparencyKnobEnd;
             if (Status == GLOW_HANDLER_STATUS.BLOCKED) {
                 _currentTransparencyValue = _knobTransparency.FinalValue;
+                if (SendMidiOn != null)
+                    SendMidiOn(_glowClipStop);
                 Status = GLOW_HANDLER_STATUS.IDLE;
             }
         }
@@ -235,8 +241,9 @@ namespace _499.InteractionHandlers {
             if (Status == GLOW_HANDLER_STATUS.BLOCKED) {
                 _currentTransparencyValue = _knobTransparency.FinalValue;
                 Status = GLOW_HANDLER_STATUS.SHOWING;
-                if (UserNum <= 0)
+                if (UserNum <= 0) {
                     UpdateGlowLoop();
+                }
             }
         }
         #endregion

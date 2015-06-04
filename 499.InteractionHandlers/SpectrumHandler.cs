@@ -34,10 +34,10 @@ namespace _499.InteractionHandlers {
 
     public class SpectrumHandler {
         private int _nUsers = 0;
-        private const Midi.Pitch BASE_SUN_LOOP_NOTE_PLAY = Midi.Pitch.ASharp1;  // For playing the main loop
-        private const Midi.Pitch BASE_SUN_LOOP_NOTE_STOP = Midi.Pitch.ASharp2;  // For Stoping the main loop
+        public const Midi.Pitch BASE_SUN_LOOP_NOTE_PLAY = Midi.Pitch.ASharp1;  // For playing the main loop
+        public const Midi.Pitch BASE_SUN_LOOP_NOTE_STOP = Midi.Pitch.ASharp2;  // For Stoping the main loop
+        public const Midi.Control BASE_SUN_PLAYING_POS = Midi.Control.DataEntryMSB;  // for setting the main loop random position
         private const Midi.Control SPECTRUMS_PLAYING_POS = Midi.Control.DataEntryLSB;  // for setting the spectrums random position
-        private const Midi.Control BASE_SUN_PLAYING_POS = Midi.Control.DataEntryMSB;  // for setting the main loop random position
         //private Midi.Pitch _previousClipStop;  // The note to turn off the previous spectrum (or base loop) after the fade in (in SHOWING)
         private Spectrum[] _spectrums;
         private Spectrum _currentSpectrum;
@@ -88,7 +88,12 @@ namespace _499.InteractionHandlers {
                 SendControlChange(_knobGlowHue.CCValue, BASE_HUE_VALUE);
                 for (int i = 0; i < _spectrums.Length; i++) {
                     SendControlChange(_spectrums[i].CCValue, 0);
+                    if (SendMidiNote != null)
+                        SendMidiNote(_spectrums[i].NoteStop);
                 }
+            }
+            if (SendMidiNote != null) {
+                SendMidiNote(BASE_SUN_LOOP_NOTE_PLAY);
             }
 
         }
